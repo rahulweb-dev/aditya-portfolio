@@ -1,0 +1,160 @@
+@import 'tailwindcss';
+
+/* Dark mode follows the pull cord, which sets data-theme on <html>. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root {
+  --bg: #efefed;
+  --bg-2: #e4e4e1;
+  --fg: #151618;
+  --muted: #a3a4a6;
+  --soft: #5d6066;
+  --line: #d2d2ce;
+  --card: #ffffff;
+  --wall: #e1e1dd;
+  --casing: #c9c9c4;
+  --gold: #e3b84f;
+  --live: #3fbf6a;
+  --shadow-color: rgba(20, 22, 26, 0.35);
+  --scene-wall: #d4d6d2;
+  --scene-casing: #bfc2bd;
+  --scene-baseboard: #b3b6b1;
+  --scene-floor: #c4c6c1;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #1d2025;
+  --bg-2: #24282e;
+  --fg: #f3f3f1;
+  --muted: #8d9198;
+  --soft: #b7bac0;
+  --line: #353a42;
+  --card: #2a2e35;
+  --wall: #22262c;
+  --casing: #5a5f68;
+  --shadow-color: rgba(0, 0, 0, 0.7);
+  --scene-wall: #2e3338;
+  --scene-casing: #474d55;
+  --scene-baseboard: #3a4047;
+  --scene-floor: #24282d;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-soft: var(--soft);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --color-wall: var(--wall);
+  --color-gold: var(--gold);
+  --color-live: var(--live);
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, Consolas, monospace;
+  --shadow-soft: 0 18px 40px -18px var(--shadow-color);
+}
+
+@theme {
+  --animate-sway: sway 4s ease-in-out infinite;
+  --animate-flip: flip 0.6s cubic-bezier(0.5, 0, 0.3, 1);
+  --animate-enter: enter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-rise: rise 0.35s ease;
+  --animate-fade-out: fade-out 0.8s ease forwards;
+  --animate-fade-in: fade-in 0.25s ease;
+  --animate-sheet-up: sheet-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-drop: drop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+  @keyframes flip {
+    0% { transform: rotateX(0); }
+    45%, 55% { transform: rotateX(-88deg); }
+    100% { transform: rotateX(0); }
+  }
+  @keyframes enter {
+    from { opacity: 0; transform: scale(0.82); filter: blur(6px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes sheet-up {
+    from { transform: translateY(110%); }
+  }
+  @keyframes drop {
+    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  }
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { transition: background-color 0.6s ease, color 0.6s ease; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+}
+
+/* Textures that are clearer as plain CSS than as utility classes */
+@layer components {
+  .notebook-rings {
+    background: radial-gradient(ellipse 4px 10px at 50% 50%, transparent 0 2px, var(--soft) 2.5px 3.5px, transparent 4px) 0 0 / 26px 26px repeat-x;
+  }
+  .cord-bulb {
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    background: radial-gradient(circle at 35% 30%, #fbe7a6, var(--gold) 45%, #9a7020 100%);
+  }
+  /* Door scene: a wall with arched doorways, a baseboard and a floor */
+  .scene-wall { background: radial-gradient(ellipse 70% 60% at 50% 35%, color-mix(in srgb, var(--scene-wall) 88%, #fff), var(--scene-wall) 70%); }
+  .scene-floor {
+    background:
+      linear-gradient(var(--scene-baseboard) 0 16px, rgba(0, 0, 0, 0.35) 16px 18px, transparent 18px),
+      linear-gradient(var(--scene-floor), color-mix(in srgb, var(--scene-floor) 70%, #000));
+  }
+  .door-recess {
+    background: #050608;
+    box-shadow:
+      0 0 0 12px var(--scene-casing),
+      0 0 0 13px rgba(0, 0, 0, 0.3),
+      -6px 10px 30px 10px rgba(0, 0, 0, 0.25),
+      inset 0 12px 30px rgba(0, 0, 0, 0.8);
+  }
+  .door-leaf {
+    background:
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 2px, rgba(255, 255, 255, 0.05) 2px 3px, transparent 3px 11px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent 35%, rgba(0, 0, 0, 0.22)),
+      var(--door);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset -6px 0 12px rgba(0, 0, 0, 0.2);
+    backface-visibility: hidden;
+  }
+  .door-plate {
+    background: linear-gradient(135deg, #f8dd85, #c99a2e 55%, #f3d27a);
+    color: #3b2a07;
+    text-shadow: 0 1px 0 rgba(255, 240, 190, 0.6);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(120, 85, 10, 0.5);
+  }
+  .door-gold { background: linear-gradient(180deg, #fff1bd, #e2b445 45%, #9c6f17); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45); }
+  .door-keyhole {
+    background:
+      radial-gradient(circle at 50% 30%, #111 0 22%, transparent 24%),
+      linear-gradient(#111, #111) 50% 72% / 22% 40% no-repeat,
+      linear-gradient(180deg, #fff1bd, #e2b445 45%, #9c6f17);
+  }
+  .scene-title { text-shadow: 0 0 28px color-mix(in srgb, var(--fg) 30%, transparent); }
+  .story-glow {
+    background: radial-gradient(ellipse 45% 40% at 25% 40%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%), var(--bg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+}

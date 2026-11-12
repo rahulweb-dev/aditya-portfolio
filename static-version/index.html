@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aditya | Photographer, Filmmaker &amp; Designer</title>
+  <meta name="description" content="Photography, videography, video editing, graphic design and AI films by Aditya.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    try { var t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+
+  <!-- Pull cord: switches light / dark -->
+  <button class="cord" id="cord" type="button" aria-label="Pull to switch light and dark mode">
+    <span class="cord-line"></span>
+    <span class="cord-bulb"></span>
+  </button>
+
+  <header class="nav">
+    <a class="brand" href="#home">Aditya<span>.</span></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#home">Home</a>
+      <a href="#work" data-open="photo">Photography</a>
+      <a href="#work" data-open="video">Videography</a>
+      <a href="#work" data-open="edit">Video Editing</a>
+      <a href="#work" data-open="design">Graphic Design</a>
+      <a href="#work" data-open="ai">AI Films</a>
+      <a href="#story">My story</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="clock" aria-label="Local time"><span>Local time</span> <b class="js-time">--:--</b> <i>·</i> <span class="js-date"></span></div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span>Independent Creator</p>
+        <h1>Hi, I'm Aditya.<br><span class="muted">I am a</span></h1>
+
+        <div class="notebook" aria-live="polite">
+          <div class="rings" aria-hidden="true"></div>
+          <div class="page">
+            <span class="role js-role">Photographer</span>
+            <span class="count"><b class="js-role-i">01</b> / <span class="js-role-n">05</span></span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a class="btn btn-solid" href="#contact">Start a project <span class="arrow">→</span></a>
+          <a class="btn btn-ghost" href="#work">See my work</a>
+        </div>
+      </div>
+
+      <div class="hero-portrait">
+        <img src="assets/portrait.jpg" alt="Portrait of Aditya" width="1600" height="2000">
+        <button class="chip js-ability" type="button" aria-expanded="false" aria-controls="ability">My ability card</button>
+        <div class="ability" id="ability" hidden>
+          <p class="ability-title">What I do</p>
+          <ul>
+            <li><b>Photography</b><span>Portraits, products, events</span></li>
+            <li><b>Videography</b><span>Brand films, music videos, reels</span></li>
+            <li><b>Video editing</b><span>Cuts, colour grading, sound</span></li>
+            <li><b>Graphic design</b><span>Logos, posters, social media</span></li>
+            <li><b>AI video</b><span>Concepts, AI shots, full AI ads</span></li>
+          </ul>
+          <p class="ability-tools">Tools: [add your tools]</p>
+        </div>
+      </div>
+
+      <p class="hero-foot hero-foot-left">Remote-first, worldwide</p>
+      <a class="hero-foot hero-foot-right" href="#work">Scroll to explore ↓</a>
+    </section>
+
+    <!-- DOORS -->
+    <section class="doors-section" id="work">
+      <h2 class="doors-title">Magic happens behind the doors</h2>
+      <p class="doors-hint">Pick a door to see the work behind it.</p>
+
+      <div class="doors">
+        <button class="door" type="button" data-skill="photo" style="--door:#2f5fd0">
+          <span class="door-frame"><span class="door-glow"></span><span class="door-leaf"><span class="plate">Photo&shy;grapher</span><span class="knob"></span></span></span>
+        </button>
+        <button class="door" type="button" data-skill="video" style="--door:#2a2d33">
+          <span class="door-frame"><span class="door-glow"></span><span class="door-leaf"><span class="plate">Video&shy;grapher</span><span class="knob"></span></span></span>
+        </button>
+        <button class="door" type="button" data-skill="edit" style="--door:#8fbf95">
+          <span class="door-frame"><span class="door-glow"></span><span class="door-leaf"><span class="plate">Video Editor</span><span class="knob"></span></span></span>
+        </button>
+        <button class="door" type="button" data-skill="design" style="--door:#e2682a">
+          <span class="door-frame"><span class="door-glow"></span><span class="door-leaf"><span class="plate">Graphic Designer</span><span class="knob"></span></span></span>
+        </button>
+        <button class="door" type="button" data-skill="ai" style="--door:#7b3fc4">
+          <span class="door-frame"><span class="door-glow"></span><span class="door-leaf"><span class="plate">AI Film&shy;maker</span><span class="knob"></span></span></span>
+        </button>
+      </div>
+
+      <!-- The room behind an opened door (filled by script.js) -->
+      <div class="room" id="room" hidden>
+        <div class="room-inner">
+          <div class="room-head">
+            <div>
+              <p class="eyebrow js-room-kicker"></p>
+              <h3 class="js-room-title"></h3>
+              <p class="room-lead js-room-lead"></p>
+            </div>
+            <ul class="room-points js-room-points"></ul>
+          </div>
+          <div class="room-grid js-room-grid"></div>
+          <button class="btn btn-ghost room-back js-room-back" type="button">← Back to the doors</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY / TIMELINE -->
+    <section class="story" id="story">
+      <div class="story-left">
+        <div class="story-sticky">
+          <p class="eyebrow"><span class="dot"></span>My story</p>
+          <h2>Let's go back in time.</h2>
+          <div class="year js-year">2026</div>
+          <p class="range js-range">2026 — NOW</p>
+          <div class="progress">
+            <span><b class="js-step">01</b> / <span class="js-steps">05</span></span>
+            <span class="bar"><i class="js-bar"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <ol class="story-list">
+        <li class="entry" data-year="2026" data-range="2026 — NOW">
+          <p class="entry-date">2026 — Now</p>
+          <h3>Independent creator</h3>
+          <p class="entry-org">Working for myself, remote-first</p>
+          <ul>
+            <li>Photography, films, edits, design and AI video for brands and artists.</li>
+            <li>[Add a highlight: a client, a campaign or a result.]</li>
+          </ul>
+        </li>
+        <li class="entry" data-year="2025" data-range="[MONTH] 2025 — [MONTH] 2025">
+          <p class="entry-date">2025</p>
+          <h3>[Role, e.g. AI video creator]</h3>
+          <p class="entry-org">[Company or client]</p>
+          <ul><li>[What you made and what came of it.]</li></ul>
+        </li>
+        <li class="entry" data-year="2024" data-range="[MONTH] 2024 — [MONTH] 2024">
+          <p class="entry-date">2024</p>
+          <h3>[Role, e.g. Video editor]</h3>
+          <p class="entry-org">[Company or client]</p>
+          <ul><li>[What you made and what came of it.]</li></ul>
+        </li>
+        <li class="entry" data-year="2023" data-range="[MONTH] 2023 — [MONTH] 2023">
+          <p class="entry-date">2023</p>
+          <h3>[Role, e.g. Graphic designer]</h3>
+          <p class="entry-org">[Company or client]</p>
+          <ul><li>[What you made and what came of it.]</li></ul>
+        </li>
+        <li class="entry" data-year="2022" data-range="[MONTH] 2022">
+          <p class="entry-date">2022</p>
+          <h3>[Where it started, e.g. first camera]</h3>
+          <p class="entry-org">[School, course or first client]</p>
+          <ul><li>[The moment you started shooting.]</li></ul>
+        </li>
+      </ol>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact" id="contact">
+      <p class="eyebrow"><span class="dot dot-live"></span>Available for new work</p>
+      <h2>Got a project?<br><span class="muted">Let's make it together.</span></h2>
+      <p class="contact-lead">I'm taking on new work: photo shoots, brand films, edits, design and AI video. Tell me what you're making and I'll get back to you within a day.</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="mailto:[YOUR EMAIL]">Start a project <span class="arrow">→</span></a>
+        <a class="btn btn-ghost" href="#work">See my work</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-head">Work</p>
+        <a href="#work" data-open="photo">Photography</a>
+        <a href="#work" data-open="video">Videography</a>
+        <a href="#work" data-open="edit">Video Editing</a>
+        <a href="#work" data-open="design">Graphic Design</a>
+        <a href="#work" data-open="ai">AI Films</a>
+      </div>
+      <div>
+        <p class="footer-head">Navigate</p>
+        <a href="#home">Home</a>
+        <a href="#story">My story</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div>
+        <p class="footer-head">Elsewhere</p>
+        <a href="#">Instagram [link]</a>
+        <a href="#">YouTube [link]</a>
+        <a href="#">Behance [link]</a>
+      </div>
+      <div>
+        <p class="footer-head">Status</p>
+        <p>Available for work</p>
+        <p>Remote-first, worldwide</p>
+        <p>Local time <span class="js-time">--:--</span></p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© <span class="js-year-now">2026</span> Aditya. Designed and built by Aditya.</p>
+      <a href="#home">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
