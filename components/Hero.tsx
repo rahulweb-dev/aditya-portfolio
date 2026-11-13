@@ -13,7 +13,7 @@ export default function Hero() {
     >
       <HeroBackdrop />
       <div className="flex min-w-0 flex-col gap-7">
-        <Eyebrow>Independent Creator</Eyebrow>
+        <Eyebrow>{SITE.fullName}</Eyebrow>
         <h1 className="text-[clamp(44px,6.4vw,92px)] leading-[1.02] font-semibold tracking-[-0.035em] text-balance">
           Hi, I&apos;m {SITE.name}.<br />
           <span className="text-muted">I am a</span>
@@ -31,8 +31,8 @@ export default function Hero() {
         <AbilityCard />
       </div>
 
-      <p className="absolute bottom-7 left-[clamp(16px,4vw,64px)] m-0 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase md:left-1/2 md:-translate-x-1/2">
-        Remote-first, worldwide
+      <p className="absolute bottom-7 left-[clamp(16px,4vw,64px)] m-0 rounded-full bg-bg/90 px-2.5 py-1 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase md:left-1/2 md:-translate-x-1/2">
+        Based in {SITE.location}
       </p>
       <a href="#work" className="absolute right-[clamp(16px,4vw,64px)] bottom-7 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase no-underline">
         Scroll to explore ↓

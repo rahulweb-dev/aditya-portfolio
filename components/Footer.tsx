@@ -20,17 +20,21 @@ export default function Footer() {
         </div>
         <div className="flex flex-col gap-2">
           <p className={head}>Elsewhere</p>
-          {SITE.socials.map(s => <a key={s.label} href={s.href} className={link}>{s.label}</a>)}
+          {SITE.socials.map(s => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className={link}>
+              {s.label} ↗
+            </a>
+          ))}
         </div>
         <div className="flex flex-col gap-2 text-soft">
-          <p className={head}>Status</p>
-          <p>Available for work</p>
-          <p>Remote-first, worldwide</p>
-          <p>Local time <TimeText /></p>
+          <p className={head}>Contact</p>
+          <a href={`mailto:${SITE.email}`} className={`${link} break-all`}>{SITE.email}</a>
+          <a href={SITE.phoneHref} className={link}>{SITE.phone}</a>
+          <p>{SITE.location} · <TimeText /></p>
         </div>
       </div>
       <div className="mt-12 flex flex-wrap justify-between gap-3 text-[13px] text-muted">
-        <p>© {new Date().getFullYear()} {SITE.name}. Designed and built by {SITE.name}.</p>
+        <p>© {new Date().getFullYear()} {SITE.fullName} · {SITE.title}</p>
         <a href="#home" className={link}>Back to top ↑</a>
       </div>
     </footer>

@@ -6,8 +6,9 @@ const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
 
 export const metadata: Metadata = {
-  title: 'Aditya | Photographer, Filmmaker & Designer',
-  description: 'Photography, videography, video editing, graphic design and AI films by Aditya.',
+  title: 'G.L. Aditya Vardhan | Graphic Designer & Creative Editor',
+  description:
+    'Graphic designer and creative editor in Hyderabad, India: social media creatives, ad banners, product and model retouching, reels and AI content.',
 };
 
 // Applies the saved theme before first paint so the page doesn't flash.
