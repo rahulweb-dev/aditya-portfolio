@@ -1,6 +1,6 @@
 import { TimeText } from './Clock';
 import Logo from './Logo';
-import { ROOMS, SITE } from '@/lib/content';
+import { BRAND, ROOMS, SITE } from '@/lib/content';
 
 const link = 'text-soft no-underline transition-colors hover:text-fg';
 const head = 'mb-1 font-mono text-[11px] font-medium tracking-[0.1em] text-fg uppercase';
@@ -11,10 +11,13 @@ export default function Footer() {
       <div className="flex flex-col gap-12 lg:flex-row lg:gap-20">
         <div className="flex flex-col gap-4">
           <Logo variant="stacked" width={132} />
-          <p className="max-w-[24ch] text-soft">
+          <p className="max-w-[26ch] text-soft">
             {SITE.fullName}
             <br />
             {SITE.title}
+          </p>
+          <p className="max-w-[26ch] font-serif text-[17px] leading-snug text-fg italic">
+            {BRAND.name}: {BRAND.tagline.charAt(0).toLowerCase() + BRAND.tagline.slice(1)}.
           </p>
         </div>
 

@@ -9,7 +9,7 @@ export default function DoorDetails({ room, visible, style, className = '' }: { 
       className={`pointer-events-none min-w-0 transition-[opacity,translate] duration-500 ease-out ${visible ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'} ${className}`}
       style={style}
     >
-      <h3 className="text-[clamp(22px,2.3vw,34px)] font-semibold tracking-[-0.02em] text-fg">{room.title}</h3>
+      <h3 className="text-[clamp(22px,2.3vw,34px)] leading-[1.1] font-semibold tracking-[-0.02em] text-balance text-fg">{room.title}</h3>
       <p className="mt-1.5 font-mono text-[10px] font-medium tracking-[0.12em] text-soft uppercase md:text-[11px]">{room.motto}</p>
       <ul className="mt-4 grid list-none gap-2 p-0">
         {room.points.map(p => (

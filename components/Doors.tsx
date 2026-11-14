@@ -115,8 +115,9 @@ export default function Doors() {
       {/* Desktop: a 3D room of doors. Hover one to fade the rest and read its details. */}
       <div className="relative hidden h-screen min-h-[680px] md:block" onMouseLeave={() => !busy.current && setHovered(null)}>
         <DoorRoom hovered={hovered} setHovered={setHovered} openKey={openKey} flight={flight} onSelect={key => enter(key)} onReady={onReady} />
+        <div aria-hidden="true" className="scene-vignette pointer-events-none absolute inset-0" />
         <h2 className="scene-title pointer-events-none absolute inset-x-0 top-[clamp(96px,14vh,140px)] text-center text-[clamp(34px,4.4vw,64px)] font-semibold tracking-[-0.03em] text-balance">
-          Magic happens behind the doors
+          Magic happens behind <span className="serif-accent">the doors</span>
         </h2>
         {/* Keyboard access to the 3D doors */}
         <div className="sr-only">
@@ -130,7 +131,7 @@ export default function Doors() {
 
       {/* Phones: doors stacked, details beside each */}
       <div data-scene className="scene-wall px-4 pt-24 pb-16 md:hidden">
-        <h2 className="scene-title text-center text-[34px] font-semibold tracking-[-0.03em] text-balance">Magic happens behind the doors</h2>
+        <h2 className="scene-title text-center text-[34px] font-semibold tracking-[-0.03em] text-balance">Magic happens behind <span className="serif-accent">the doors</span></h2>
         <div className="mt-12 flex flex-col gap-12">
           {ROOMS.map(room => (
             <div key={room.key} className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-6">

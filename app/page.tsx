@@ -1,4 +1,6 @@
+import AdysseyMeaning from '@/components/AdysseyMeaning';
 import BrandIntro from '@/components/BrandIntro';
+import Marquee from '@/components/Marquee';
 import Nav from '@/components/Nav';
 import PullCord from '@/components/PullCord';
 import Hero from '@/components/Hero';
@@ -15,6 +17,8 @@ export default function Home() {
       <Nav />
       <main>
         <Hero />
+        <AdysseyMeaning />
+        <Marquee />
         <Doors />
         <Story />
         <Contact />

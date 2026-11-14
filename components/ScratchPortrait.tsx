@@ -127,12 +127,25 @@ export default function ScratchPortrait({ src, alt }: { src: string; alt: string
         className={`absolute inset-0 size-full cursor-crosshair touch-pan-y transition-opacity duration-700 ${ready ? '' : 'invisible'} ${done ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
       />
       <span
-        className={`pointer-events-none absolute top-[18px] left-[18px] rounded-full bg-[rgba(16,17,20,0.8)] px-3 py-1.5 font-mono text-[11px] text-[#f3f3f1] transition-opacity duration-500 ${
+        className={`pointer-events-none absolute bottom-[18px] left-[18px] rounded-full bg-[rgba(16,17,20,0.8)] px-3 py-1.5 font-mono text-[11px] text-[#f3f3f1] transition-opacity duration-500 ${
           ready && !started ? 'opacity-100' : 'opacity-0'
         }`}
       >
         Scratch to reveal
       </span>
+
+      {/* Camera viewfinder: corner brackets and a recording light */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3.5">
+        <span className="absolute top-0 left-0 size-6 border-t-2 border-l-2 border-white/75" />
+        <span className="absolute top-0 right-0 size-6 border-t-2 border-r-2 border-white/75" />
+        <span className="absolute bottom-0 left-0 size-6 border-b-2 border-l-2 border-white/75" />
+        <span className="absolute right-0 bottom-0 size-6 border-r-2 border-b-2 border-white/75" />
+        <span className="absolute top-2 right-9 flex items-center gap-2 font-mono text-[10px] tracking-[0.14em] text-white/90 uppercase [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+          <span className="rec-blink size-2 rounded-full bg-rec" />
+          Rec
+          <span className="opacity-60">4K · 24 fps</span>
+        </span>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,7 @@ export function SolidButton({ href, children }: { href: string; children: ReactN
   return (
     <a
       href={href}
-      className="group inline-flex min-h-[46px] items-center gap-2.5 rounded-full bg-fg py-0 pr-2 pl-5 text-sm font-medium text-bg no-underline transition hover:-translate-y-0.5"
+      className="group inline-flex min-h-[46px] items-center gap-2.5 rounded-full bg-fg py-0 pr-2 pl-5 text-sm font-medium text-bg no-underline shadow-[3px_3px_0_0_var(--aura-violet)] transition hover:-translate-x-px hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_var(--aura-violet)]"
     >
       {children}
       <span className="grid size-8 place-items-center rounded-full bg-bg text-fg transition-transform group-hover:-rotate-45">→</span>

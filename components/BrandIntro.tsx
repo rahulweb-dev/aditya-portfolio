@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { BRAND } from '@/lib/content';
 
 const LOGO_SRC = '/brand/adyssey-logo-stacked-light.svg';
-const SHOW_FOR = 3200; // ms before the intro hands over to the site
+const SHOW_FOR = 3700; // ms before the intro hands over to the site
 
 type Piece = { d: string; delay: number; duration: number };
 type LogoData = { viewBox: string; pearl: string; red: string; pieces: Piece[] };
@@ -109,29 +110,36 @@ export default function BrandIntro() {
       <div className="intro-aura absolute inset-0" />
 
       {logo && (
-        <svg viewBox={logo.viewBox} className="intro-logo relative w-[min(58vw,340px)] overflow-visible">
-          {/* 1. a pen line traces each stroke of the logo, left to right */}
-          <g className="intro-strokes">
-            {logo.pieces.map((p, i) => (
-              <path
-                key={i}
-                d={p.d}
-                pathLength={1}
-                fill="none"
-                stroke="#F4F0E8"
-                strokeWidth={1.4}
-                vectorEffect="non-scaling-stroke"
-                strokeLinejoin="round"
-                className="intro-stroke"
-                style={{ animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s` }}
-              />
-            ))}
-          </g>
-          {/* 2. the real shape fills in (so the counters of letters stay open) */}
-          <path d={logo.pearl} fill="#F4F0E8" className="intro-fill" />
-          {/* 3. the red lens dot and playhead */}
-          <path d={logo.red} fill="#FF3B30" className="intro-rec" />
-        </svg>
+        <div className="relative flex flex-col items-center gap-6">
+          <svg viewBox={logo.viewBox} className="intro-logo relative w-[min(58vw,340px)] overflow-visible">
+            {/* 1. a pen line traces each stroke of the logo, left to right */}
+            <g className="intro-strokes">
+              {logo.pieces.map((p, i) => (
+                <path
+                  key={i}
+                  d={p.d}
+                  pathLength={1}
+                  fill="none"
+                  stroke="#F4F0E8"
+                  strokeWidth={1.4}
+                  vectorEffect="non-scaling-stroke"
+                  strokeLinejoin="round"
+                  className="intro-stroke"
+                  style={{ animationDelay: `${p.delay}s`, animationDuration: `${p.duration}s` }}
+                />
+              ))}
+            </g>
+            {/* 2. the real shape fills in (so the counters of letters stay open) */}
+            <path d={logo.pearl} fill="#F4F0E8" className="intro-fill" />
+            {/* 3. the red lens dot and playhead */}
+            <path d={logo.red} fill="#FF3B30" className="intro-rec" />
+          </svg>
+          {/* 4. what the name means */}
+          <p className="intro-tagline m-0 text-center">
+            <span className="block font-serif text-[clamp(22px,3vw,30px)] text-[#F4F0E8] italic">{BRAND.tagline}</span>
+            <span className="mt-2 block font-mono text-[10px] tracking-[0.24em] text-[#F4F0E8]/55 uppercase">Aditya + Odyssey</span>
+          </p>
+        </div>
       )}
 
       <span className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 font-mono text-[11px] tracking-[0.14em] text-[#F4F0E8]/50 uppercase">

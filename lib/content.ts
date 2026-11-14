@@ -3,7 +3,7 @@
 export const SITE = {
   name: 'Aditya',
   fullName: 'G.L. Aditya Vardhan',
-  title: 'Graphic Designer & Creative Editor',
+  title: 'Graphic Designer & Photographer',
   email: 'adityavardhan1502@gmail.com',
   phone: '+91 90598 91502',
   phoneHref: 'tel:+919059891502',
@@ -12,13 +12,26 @@ export const SITE = {
   socials: [{ label: 'ArtStation', href: 'https://adityavardhan1502.artstation.com' }],
 };
 
+// What "Adyssey" means: shown in the intro, the "What's in a name?" section and the footer.
+export const BRAND = {
+  name: 'Adyssey',
+  phonetic: '/ˈæd·ɪ·si/',
+  tagline: 'The visual adventures of Aditya',
+  senses: [
+    'Aditya + odyssey.',
+    'The visual wonders and adventures of G.L. Aditya Vardhan.',
+    'Like an odyssey, a long, wandering journey full of changes of fortune, challenges and growth, told in photographs, designs and films.',
+  ],
+  signoff: 'It’s my journey, my adventure and my story.',
+};
+
 // The flipping word in "I am a …"
-export const ROLES = ['Graphic Designer', 'Creative Editor', 'Photo Retoucher', 'Video Editor', 'AI Content Creator'];
+export const ROLES = ['Photographer', 'Graphic Designer', 'Video Editor', 'AI Content Creator'];
 
 // "My ability card" in the hero
 export const ABILITIES = [
   { skill: 'Graphic design', detail: 'Digital & print, social media, visual branding' },
-  { skill: 'Image editing', detail: 'Retouching, model & skin editing, colour correction' },
+  { skill: 'Photography & photo editing', detail: 'Visual storytelling, colour grading, post-production' },
   { skill: 'E-commerce creatives', detail: 'Product images for websites, ads & marketplaces' },
   { skill: 'Video editing', detail: 'Reels and edits for social media' },
   { skill: 'AI content', detail: 'AI-generated videos, concepts & mockups' },
@@ -27,7 +40,7 @@ export const TOOLS = ['Photoshop', 'Illustrator', 'InDesign', 'Lightroom', 'Afte
 export const CERTIFICATIONS = ['Figma', 'Basic HTML', 'Unity'];
 export const LANGUAGES = ['English', 'Hindi', 'Telugu', 'Kannada'];
 
-export type SkillKey = 'photo' | 'video' | 'edit' | 'design' | 'ai';
+export type SkillKey = 'design' | 'photo' | 'video' | 'ai';
 
 export type Project = {
   img: string;
@@ -44,19 +57,19 @@ export type Room = {
   nav: string; // menu label
   plate: string; // text on the door's gold plate
   color: string; // door colour
-  title: string;
+  title: string; // heading shown when the door is hovered, and on its page
   motto: string; // small caps line beside the door
   lead: string;
   points: string[];
   projects: Project[];
 };
 
-// One door per skill, left to right. Project images in /public/assets are placeholders: swap in real work.
+// Four doors, left to right. Project images in /public/assets are placeholders: swap in real work.
 export const ROOMS: Room[] = [
   {
     key: 'design',
     nav: 'Graphic Design',
-    plate: 'Graphic Designer',
+    plate: 'Graphic Design',
     color: '#e2682a',
     title: 'Graphic Design',
     motto: 'One brand, every format',
@@ -100,48 +113,41 @@ export const ROOMS: Room[] = [
   {
     key: 'photo',
     nav: 'Photography',
-    plate: 'Photo Editor',
+    plate: 'Photography',
     color: '#2f5fd0',
-    title: 'Photography & Retouching',
+    title: 'Photography & Photo Editing',
     motto: 'Every pixel, considered',
-    lead: 'Product, model and lifestyle images edited for websites, social media and marketplaces.',
-    points: ['Model editing & skin retouching', 'Colour grading & correction', 'Mood & lifestyle shots', 'Photography'],
+    lead: 'Photographs and edits that tell a story, with a consistent look from the shoot to the final grade.',
+    points: ['Visual storytelling', 'Artistic direction & consistency', 'Colour grading', 'Post-production'],
+    // Placeholders: add your own shoots here (images go in /public/assets).
     projects: [
       {
         img: '/assets/portrait.jpg',
-        title: 'Model & product retouching',
-        tag: 'GIVA',
-        kicker: 'Retouching · Jewellery',
-        blurb: 'Edited and enhanced product, model and lifestyle images: skin retouching, colour grading and background enhancement, working with the photography team.',
-        chips: ['Skin retouching', 'Colour grading', 'Backgrounds'],
-      },
-      {
-        img: '/assets/silk.jpg',
-        title: 'Mood & lifestyle shots',
-        tag: 'GIVA',
-        kicker: 'Editing · Brand story',
-        blurb: 'Created and edited mood shots and lifestyle visuals to strengthen brand storytelling.',
-        chips: ['Mood shots', 'Lifestyle'],
+        title: '[Your photo series]',
+        tag: '[Client or personal project]',
+        kicker: 'Photography · [Type]',
+        blurb: '[The story behind the shoot, the look you went for and how you edited it.]',
+        chips: ['Visual storytelling', 'Colour grading'],
       },
       {
         img: '/assets/dune.jpg',
-        title: 'Marketplace creatives',
-        tag: 'GIVA',
-        kicker: 'E-commerce · Marketplaces',
-        blurb: 'Optimised creatives for e-commerce marketplaces to improve how products are presented.',
-        chips: ['E-commerce', 'Product images'],
+        title: '[Your photo series]',
+        tag: '[Client or personal project]',
+        kicker: 'Photography · [Type]',
+        blurb: '[The story behind the shoot, the look you went for and how you edited it.]',
+        chips: ['Artistic direction', 'Post-production'],
       },
     ],
   },
   {
-    key: 'edit',
-    nav: 'Video Editing',
-    plate: 'Video Editor',
+    key: 'video',
+    nav: 'Videography',
+    plate: 'Videography',
     color: '#8fbf95',
-    title: 'Video Editing',
-    motto: 'Every cut has a reason',
-    lead: 'Reels and video edits for social media, cut in Premiere Pro, After Effects and CapCut.',
-    points: ['Reels & short-form edits', 'Social media video', 'Motion graphics', 'Colour & sound'],
+    title: 'Videography & Video Editing',
+    motto: 'From the first frame to the final cut',
+    lead: 'Footage shot and cut into reels and social media videos, in Premiere Pro, After Effects and CapCut.',
+    points: ['Reels & short-form edits', 'Social media video', 'Colour & sound'],
     projects: [
       {
         img: '/assets/city.jpg',
@@ -161,27 +167,23 @@ export const ROOMS: Room[] = [
         chips: ['Reels', 'Campaign'],
         film: true,
       },
-    ],
-  },
-  {
-    key: 'video',
-    nav: 'Videography',
-    plate: 'Videographer',
-    color: '#3a3f4a',
-    title: 'Videography',
-    motto: 'From the first frame to the final shot',
-    lead: '[A line about the footage you shoot.]',
-    points: ['[What you shoot]', '[What you shoot]', '[What you shoot]'],
-    projects: [
-      { img: '/assets/sea.jpg', title: '[Your shoot]', tag: '[Client or project]', kicker: 'Film', blurb: '[What you shot and how.]', chips: ['[Camera]'], film: true },
+      {
+        img: '/assets/sea.jpg',
+        title: '[Your shoot]',
+        tag: '[Client or project]',
+        kicker: 'Videography · [Type]',
+        blurb: '[What you shot, on what, and how you cut it.]',
+        chips: ['[Camera]'],
+        film: true,
+      },
     ],
   },
   {
     key: 'ai',
-    nav: 'AI Content',
+    nav: 'AI Creator',
     plate: 'AI Creator',
     color: '#7b3fc4',
-    title: 'AI Content',
+    title: 'AI Creator',
     motto: 'The idea first, the tools second',
     lead: 'AI-generated videos and visuals, and AI tools that raise quality and speed up production.',
     points: ['AI-generated videos', 'Concepts & mockups', 'Visual variations', 'Faster workflows'],
@@ -209,7 +211,15 @@ export const ROOMS: Room[] = [
 
 export const isSkill = (k: string): k is SkillKey => ROOMS.some(r => r.key === k);
 
-export type StoryEntry = { year: number; range: string; date: string; title: string; org: string; points: string[] };
+export type StoryEntry = {
+  year: number;
+  range: string;
+  date: string;
+  title: string;
+  org: string;
+  points: string[];
+  section?: string; // starts a new heading on the timeline above this entry, e.g. "Education"
+};
 
 // Newest first. The big year counter rolls to each entry's year as it scrolls into view.
 export const STORY: StoryEntry[] = [
@@ -266,6 +276,7 @@ export const STORY: StoryEntry[] = [
     range: '2023 — 2026',
     date: '2023 — 2026',
     title: 'BSc Multimedia & Animation',
+    section: 'Education',
     org: 'REVA University',
     points: ['Graphic design, animation, visual storytelling and game design in Unity.'],
   },

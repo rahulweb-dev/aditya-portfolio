@@ -1,9 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Instrument_Serif } from 'next/font/google';
+import Grain from '@/components/Grain';
+import SmoothScroll from '@/components/SmoothScroll';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist-sans' });
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' });
+// The retro italic serif mixed into headlines
+const instrumentSerif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], variable: '--font-instrument-serif' });
 
 // Link previews need the full web address. Set NEXT_PUBLIC_SITE_URL once the site has a domain;
 // on Vercel the project's address is picked up automatically.
@@ -11,9 +15,9 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000');
 
-const title = 'Adyssey | G.L. Aditya Vardhan, Graphic Designer & Creative Editor';
+const title = 'Adyssey: the visual adventures of G.L. Aditya Vardhan | Graphic Designer & Photographer';
 const description =
-  'Graphic designer and creative editor in Hyderabad, India: social media creatives, ad banners, product and model retouching, reels and AI content.';
+  'Adyssey (Aditya + odyssey) is the visual journey of G.L. Aditya Vardhan, a graphic designer and photographer in Hyderabad, India: photography, graphic design, videography and AI content.';
 const ogImage = { url: '/og-image-1200x630.png', width: 1200, height: 630, alt: 'Adyssey logo' };
 
 export const metadata: Metadata = {
@@ -43,11 +47,15 @@ const bootScript = `try{var d=document.documentElement,t=localStorage.getItem('t
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="light" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" data-theme="light" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body className="bg-bg font-sans text-fg antialiased">{children}</body>
+      <body className="bg-bg font-sans text-fg antialiased">
+        <SmoothScroll />
+        {children}
+        <Grain />
+      </body>
     </html>
   );
 }
