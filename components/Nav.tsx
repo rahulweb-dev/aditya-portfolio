@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Clock from './Clock';
+import Logo from './Logo';
 import { ROOMS, SITE, type SkillKey } from '@/lib/content';
 
 type Section = 'home' | 'work' | 'story' | 'contact';
@@ -53,13 +54,12 @@ export default function Nav({ active }: { active?: SkillKey }) {
     <>
       <header className="sticky top-0 z-30">
         <div
-          className={`flex items-center justify-between gap-6 py-3.5 pr-16 pl-[clamp(16px,4vw,64px)] transition-[background-color,border-color,box-shadow] duration-300 lg:pr-[clamp(64px,6vw,96px)] ${
+          className={`flex items-center justify-between gap-6 py-2 pr-16 pl-[clamp(16px,4vw,64px)] transition-[background-color,border-color,box-shadow] duration-300 lg:pr-[clamp(64px,6vw,96px)] ${
             scrolled ? 'border-b border-line bg-bg/95 shadow-[0_10px_30px_-20px_var(--shadow-color)]' : 'border-b border-transparent'
           }`}
         >
-          <Link href="/#home" className="text-lg font-bold tracking-tight no-underline">
-            {SITE.name}
-            <span className="text-gold">.</span>
+          <Link href="/#home" aria-label={`Adyssey, ${SITE.fullName}: home`} className="no-underline">
+            <Logo width={160} />
           </Link>
 
           <DesktopLinks current={current} active={active} />

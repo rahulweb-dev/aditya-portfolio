@@ -1,3 +1,4 @@
+import BrandIntro from '@/components/BrandIntro';
 import Nav from '@/components/Nav';
 import PullCord from '@/components/PullCord';
 import Hero from '@/components/Hero';
@@ -9,6 +10,7 @@ import Footer from '@/components/Footer';
 export default function Home() {
   return (
     <>
+      <BrandIntro />
       <PullCord />
       <Nav />
       <main>

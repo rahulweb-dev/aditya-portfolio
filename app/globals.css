@@ -3,41 +3,48 @@
 /* Dark mode follows the pull cord, which sets data-theme on <html>. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* Adyssey brand palette (brand/ADYSSEY_Logo_Website_Kit, page 3):
+   Pearl #F4F0E8, Obsidian #0B0A0F, Ink #15131C, REC red #FF3B30,
+   aura violet #8B6BFF, aura pink #FF4FD8, aura orange #FF8A3D. */
 :root {
-  --bg: #efefed;
-  --bg-2: #e4e4e1;
-  --fg: #151618;
-  --muted: #a3a4a6;
-  --soft: #5d6066;
-  --line: #d2d2ce;
-  --card: #ffffff;
-  --wall: #e1e1dd;
-  --casing: #c9c9c4;
+  --bg: #f4f0e8; /* Pearl */
+  --bg-2: #ebe6dc;
+  --fg: #15131c; /* Ink */
+  --muted: #9a948b;
+  --soft: #5c5762;
+  --line: #dad3c6;
+  --card: #fbf9f5;
+  --wall: #e8e2d6;
+  --casing: #c8c1b4;
   --gold: #e3b84f;
   --live: #3fbf6a;
-  --shadow-color: rgba(20, 22, 26, 0.35);
-  --scene-wall: #d4d6d2;
-  --scene-casing: #bfc2bd;
-  --scene-baseboard: #b3b6b1;
-  --scene-floor: #c4c6c1;
+  --rec: #ff3b30;
+  --aura-violet: #8b6bff;
+  --aura-pink: #ff4fd8;
+  --aura-orange: #ff8a3d;
+  --shadow-color: rgba(21, 19, 28, 0.32);
+  --scene-wall: #dcd6ca;
+  --scene-casing: #c6bfb2;
+  --scene-baseboard: #bab3a6;
+  --scene-floor: #cdc6b9;
   color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --bg: #1d2025;
-  --bg-2: #24282e;
-  --fg: #f3f3f1;
-  --muted: #8d9198;
-  --soft: #b7bac0;
-  --line: #353a42;
-  --card: #2a2e35;
-  --wall: #22262c;
-  --casing: #5a5f68;
-  --shadow-color: rgba(0, 0, 0, 0.7);
-  --scene-wall: #2e3338;
-  --scene-casing: #474d55;
-  --scene-baseboard: #3a4047;
-  --scene-floor: #24282d;
+  --bg: #0b0a0f; /* Obsidian */
+  --bg-2: #15131c; /* Ink */
+  --fg: #f4f0e8; /* Pearl */
+  --muted: #8a8594;
+  --soft: #bab4c4;
+  --line: #2a2733;
+  --card: #17151f;
+  --wall: #121018;
+  --casing: #4a4655;
+  --shadow-color: rgba(0, 0, 0, 0.75);
+  --scene-wall: #24212c;
+  --scene-casing: #403c4b;
+  --scene-baseboard: #312e3a;
+  --scene-floor: #18161f;
   color-scheme: dark;
 }
 
@@ -52,6 +59,10 @@
   --color-wall: var(--wall);
   --color-gold: var(--gold);
   --color-live: var(--live);
+  --color-rec: var(--rec);
+  --color-aura-violet: var(--aura-violet);
+  --color-aura-pink: var(--aura-pink);
+  --color-aura-orange: var(--aura-orange);
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, Consolas, monospace;
   --shadow-soft: 0 18px 40px -18px var(--shadow-color);
@@ -66,6 +77,7 @@
   --animate-fade-in: fade-in 0.25s ease;
   --animate-sheet-up: sheet-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-drop: drop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-intro: intro 1.8s cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes sway {
     0%, 100% { transform: rotate(-3deg); }
@@ -81,6 +93,9 @@
   }
   @keyframes rise {
     from { opacity: 0; transform: translateY(8px); }
+  }
+  @keyframes intro {
+    from { opacity: 0; transform: scale(1.06); filter: blur(6px); }
   }
   @keyframes fade-in {
     from { opacity: 0; }
@@ -100,7 +115,7 @@
 @layer base {
   html { scroll-behavior: smooth; }
   body { transition: background-color 0.6s ease, color 0.6s ease; }
-  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--aura-violet); outline-offset: 3px; }
 }
 
 /* Textures that are clearer as plain CSS than as utility classes */
@@ -149,10 +164,18 @@
       linear-gradient(180deg, #fff1bd, #e2b445 45%, #9c6f17);
   }
   .scene-title { text-shadow: 0 0 28px color-mix(in srgb, var(--fg) 30%, transparent); }
+  /* The brand's aura: violet into pink into orange, as on the logo kit's hero image */
   .story-glow {
-    background: radial-gradient(ellipse 45% 40% at 25% 40%, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%), var(--bg);
+    background:
+      radial-gradient(ellipse 34% 30% at 22% 34%, color-mix(in srgb, var(--aura-violet) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 30% 28% at 34% 55%, color-mix(in srgb, var(--aura-pink) 14%, transparent), transparent 70%),
+      radial-gradient(ellipse 28% 24% at 26% 74%, color-mix(in srgb, var(--aura-orange) 12%, transparent), transparent 70%),
+      var(--bg);
   }
 }
+
+/* The intro has already played this visit: never show it, not even for a frame. */
+[data-intro='seen'] .brand-intro { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
