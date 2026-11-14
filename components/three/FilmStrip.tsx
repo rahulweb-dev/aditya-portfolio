@@ -1,9 +1,9 @@
 'use client';
 
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { useOnScreen } from './useThemeColors';
+import { useOnScreen, useThemeColors } from './useThemeColors';
 
 // Frames shown on the strip. Swap these for your own work in /public/assets.
 const FRAMES = ['/assets/portrait.jpg', '/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg'];
@@ -123,6 +123,110 @@ function Strip() {
   );
 }
 
+/**
+ * Living light behind the hero: aura glows (violet, pink, orange) drift like stage lights in haze,
+ * a warm halo follows the cursor, and moving the mouse sends soft ripples of light out from it.
+ * Drawn as one full-screen pass in the same canvas as the film strip, behind it.
+ */
+const auraVertex = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy * 2.0, 0.999, 1.0); // always fills the canvas, whatever the camera does
+  }
+`;
+const auraFragment = /* glsl */ `
+  uniform float uTime;
+  uniform vec2 uMouse;   // 0..1, y up
+  uniform float uAspect;
+  uniform float uEnergy; // how fast the cursor is moving, eased
+  uniform float uDark;
+  varying vec2 vUv;
+
+  float blob(vec2 p, vec2 c, float r) { vec2 d = p - c; return exp(-dot(d, d) / (r * r)); }
+
+  void main() {
+    vec3 violet = vec3(0.545, 0.420, 1.0);
+    vec3 pink = vec3(1.0, 0.310, 0.847);
+    vec3 orange = vec3(1.0, 0.541, 0.239);
+
+    vec2 p = vec2(vUv.x * uAspect, vUv.y);
+    float t = uTime * 0.07;
+    vec2 c1 = vec2((0.22 + 0.12 * sin(t * 1.3)) * uAspect, 0.68 + 0.10 * cos(t * 1.1));
+    vec2 c2 = vec2((0.60 + 0.10 * cos(t * 0.9)) * uAspect, 0.32 + 0.12 * sin(t * 1.4));
+    vec2 c3 = vec2((0.86 + 0.07 * sin(t * 1.7)) * uAspect, 0.78 + 0.08 * cos(t * 0.8));
+    vec3 col = violet * blob(p, c1, 0.45) * 0.55 + pink * blob(p, c2, 0.38) * 0.30 + orange * blob(p, c3, 0.32) * 0.28;
+
+    // the halo that follows the cursor
+    vec2 m = vec2(uMouse.x * uAspect, uMouse.y);
+    float d = length(p - m);
+    col += mix(violet, pink, 0.35) * exp(-d * d / 0.05) * 0.42;
+
+    // ripples of light while the cursor moves
+    float ring = pow(sin(d * 40.0 - uTime * 5.0) * 0.5 + 0.5, 6.0) * exp(-d * 4.0) * uEnergy;
+    col += vec3(1.0, 0.86, 0.72) * ring * 0.35;
+
+    float a = clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0);
+    gl_FragColor = vec4(col / max(a, 0.001), a * mix(0.3, 0.58, uDark));
+  }
+`;
+
+function AuraField() {
+  const { gl, size } = useThree();
+  const dark = useThemeColors(['bg']).dark;
+  const target = useRef(new THREE.Vector2(0.7, 0.55));
+  const last = useRef(new THREE.Vector2(0.7, 0.55));
+  const reduce = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches, []);
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: auraVertex,
+        fragmentShader: auraFragment,
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        uniforms: {
+          uTime: { value: 0 },
+          uMouse: { value: new THREE.Vector2(0.7, 0.55) },
+          uAspect: { value: 1 },
+          uEnergy: { value: 0 },
+          uDark: { value: 1 },
+        },
+      }),
+    [],
+  );
+
+  // Track the cursor over the page, relative to this canvas (works while scrolling too).
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const r = gl.domElement.getBoundingClientRect();
+      target.current.set((e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => window.removeEventListener('pointermove', onMove);
+  }, [gl]);
+
+  useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.1);
+    const u = material.uniforms;
+    if (!reduce) u.uTime.value = state.clock.elapsedTime;
+    u.uAspect.value = size.width / size.height;
+    u.uDark.value = THREE.MathUtils.damp(u.uDark.value, dark ? 1 : 0, 4, dt);
+    // the halo follows with a little lag, so it feels smooth rather than stuck to the pointer
+    const mouse = u.uMouse.value as THREE.Vector2;
+    mouse.lerp(target.current, 1 - Math.exp(-4 * dt));
+    const speed = last.current.distanceTo(mouse) / Math.max(dt, 0.001);
+    last.current.copy(mouse);
+    u.uEnergy.value = reduce ? 0 : THREE.MathUtils.damp(u.uEnergy.value, Math.min(1, speed * 0.9), 3, dt);
+  });
+
+  return (
+    <mesh frustumCulled={false} renderOrder={-1} material={material}>
+      <planeGeometry args={[1, 1]} />
+    </mesh>
+  );
+}
+
 /** 3D film strip that waves behind the hero and leans towards the mouse. */
 export default function FilmStrip() {
   const wrap = useRef<HTMLDivElement>(null);
@@ -138,6 +242,7 @@ export default function FilmStrip() {
         eventSource={typeof document !== 'undefined' ? document.body : undefined}
         eventPrefix="client"
       >
+        <AuraField />
         <Strip />
       </Canvas>
     </div>

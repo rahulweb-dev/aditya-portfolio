@@ -49,7 +49,7 @@ export default function Story() {
       <div>
         <div className="flex flex-col gap-[18px] md:sticky md:top-[120px]">
           <Eyebrow>My story</Eyebrow>
-          <h2 className="text-[clamp(32px,4vw,54px)] font-semibold tracking-[-0.03em]">Let&apos;s go back <span className="serif-accent">in time.</span></h2>
+          <h2 className="text-[clamp(32px,4vw,54px)] font-semibold tracking-[-0.012em]">Let&apos;s go back <span className="serif-accent">in time.</span></h2>
           <div className="text-[clamp(90px,13vw,190px)] leading-[0.9] font-bold tracking-[-0.05em] tabular-nums">{year}</div>
           <p className="m-0 font-mono text-[13px] font-medium tracking-[0.08em] text-soft uppercase">{STORY[active].range}</p>
           <div className="flex items-center gap-3.5 font-mono text-xs text-soft">

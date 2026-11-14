@@ -7,7 +7,7 @@ export default function Marquee() {
     <div aria-hidden={hidden} className="flex shrink-0 items-center gap-10 pr-10">
       {words.map((w, i) => (
         <span key={w} className="flex items-center gap-10 whitespace-nowrap">
-          <span className={i % 2 ? 'serif-accent text-[clamp(40px,6vw,84px)]' : 'text-[clamp(32px,4.6vw,64px)] font-semibold tracking-[-0.03em] uppercase'}>{w}</span>
+          <span className={i % 2 ? 'serif-accent text-[clamp(40px,6vw,84px)]' : 'font-display text-[clamp(32px,4.6vw,64px)] font-bold tracking-[-0.012em] uppercase [font-stretch:85%]'}>{w}</span>
           <span aria-hidden="true" className="text-[clamp(20px,2.4vw,32px)] text-rec">✶</span>
         </span>
       ))}

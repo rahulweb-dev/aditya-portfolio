@@ -16,7 +16,7 @@ export default function AdysseyMeaning() {
       <div className="relative mx-auto grid max-w-[1240px] grid-cols-1 items-center gap-12 md:grid-cols-[1fr_1fr] md:gap-16">
         <Reveal>
           <Eyebrow>What&apos;s in a name?</Eyebrow>
-          <h2 id="adyssey-title" className="mt-5 font-serif text-[clamp(84px,13vw,184px)] leading-[0.85] font-normal tracking-[-0.03em] italic">
+          <h2 id="adyssey-title" className="mt-5 pb-[0.2em] font-serif text-[clamp(84px,13vw,184px)] leading-[0.95] font-normal tracking-[-0.012em] italic">
             {BRAND.name}
           </h2>
           <p className="mt-4 font-mono text-[13px] tracking-[0.06em] text-soft">

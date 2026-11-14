@@ -31,7 +31,7 @@ export default function RoleNotebook() {
         key={flips}
         className={`relative flex origin-top items-end gap-5 rounded-2xl bg-card px-5 pt-[22px] pb-[18px] shadow-[0_18px_40px_-18px_var(--shadow-color),0_6px_0_-2px_var(--bg-2),0_10px_0_-4px_var(--line)] sm:px-[30px] sm:pt-[26px] sm:pb-[22px] ${flips ? 'animate-flip' : ''}`}
       >
-        <span className="text-[clamp(30px,4.4vw,60px)] leading-none font-semibold tracking-[-0.03em] sm:whitespace-nowrap">{ROLES[shown]}</span>
+        <span className="text-[clamp(30px,4.4vw,60px)] leading-none font-semibold tracking-[-0.012em] sm:whitespace-nowrap">{ROLES[shown]}</span>
         <span className="pb-1 font-mono text-[11px] text-muted">
           <b className="font-medium">{pad(shown + 1)}</b> / {pad(ROLES.length)}
         </span>

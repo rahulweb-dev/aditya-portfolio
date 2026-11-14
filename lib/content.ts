@@ -70,7 +70,7 @@ export const ROOMS: Room[] = [
     key: 'design',
     nav: 'Graphic Design',
     plate: 'Graphic Design',
-    color: '#e2682a',
+    color: '#b8321f', // vermilion poster red: the ink of print and posters
     title: 'Graphic Design',
     motto: 'One brand, every format',
     lead: 'Social media posts, carousels, ad creatives and print, designed to keep every brand consistent.',
@@ -114,7 +114,7 @@ export const ROOMS: Room[] = [
     key: 'photo',
     nav: 'Photography',
     plate: 'Photography',
-    color: '#2f5fd0',
+    color: '#1e3f78', // cyanotype Prussian blue: one of the first photographic prints
     title: 'Photography & Photo Editing',
     motto: 'Every pixel, considered',
     lead: 'Photographs and edits that tell a story, with a consistent look from the shoot to the final grade.',
@@ -143,7 +143,7 @@ export const ROOMS: Room[] = [
     key: 'video',
     nav: 'Videography',
     plate: 'Videography',
-    color: '#8fbf95',
+    color: '#14624a', // emerald: a deep take on the green screen
     title: 'Videography & Video Editing',
     motto: 'From the first frame to the final cut',
     lead: 'Footage shot and cut into reels and social media videos, in Premiere Pro, After Effects and CapCut.',
@@ -182,7 +182,7 @@ export const ROOMS: Room[] = [
     key: 'ai',
     nav: 'AI Creator',
     plate: 'AI Creator',
-    color: '#7b3fc4',
+    color: '#5b2db3', // ultraviolet: synthetic, electric violet
     title: 'AI Creator',
     motto: 'The idea first, the tools second',
     lead: 'AI-generated videos and visuals, and AI tools that raise quality and speed up production.',

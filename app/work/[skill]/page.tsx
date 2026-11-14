@@ -31,7 +31,7 @@ export default async function RoomPage({ params }: Props) {
       <Nav active={room.key} />
 
       <main className="px-[clamp(16px,4vw,64px)] pt-14 pb-[40vh]">
-        <h1 className="text-[clamp(48px,7.5vw,112px)] leading-[0.95] font-semibold tracking-[-0.04em]">{room.title}</h1>
+        <h1 className="text-[clamp(48px,7.5vw,112px)] leading-[0.95] font-semibold tracking-[-0.018em]">{room.title}</h1>
         <p className="mt-5 max-w-[60ch] text-[clamp(15px,1.3vw,18px)] leading-relaxed text-soft">{room.lead}</p>
 
         {/* Each card sticks a little lower than the last, so they stack as you scroll */}
@@ -49,7 +49,7 @@ export default async function RoomPage({ params }: Props) {
                   </span>
                   <span className="font-mono text-[11px] font-medium tracking-[0.12em] text-soft uppercase">{p.kicker}</span>
                 </div>
-                <h2 className="mt-6 text-[clamp(30px,3.6vw,52px)] leading-none font-semibold tracking-[-0.03em]">{p.title}</h2>
+                <h2 className="mt-6 text-[clamp(30px,3.6vw,52px)] leading-none font-semibold tracking-[-0.012em]">{p.title}</h2>
                 <p className="mt-2 text-sm text-soft">{p.tag}</p>
                 <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed text-soft">{p.blurb}</p>
                 <div className="mt-6 flex flex-wrap gap-2">

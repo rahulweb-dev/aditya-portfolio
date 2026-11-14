@@ -198,7 +198,7 @@ function MiniDoor({ color, className = '' }: { color: string; className?: string
   return (
     <span
       aria-hidden="true"
-      className={`relative block shrink-0 rounded-t-full shadow-[0_0_0_2px_var(--line)] ${className}`}
+      className={`gothic-arch relative block shrink-0 ${className}`}
       style={{ background: `repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 4px), ${color}` }}
     >
       <span className="absolute top-[55%] right-[18%] size-[3px] rounded-full bg-gold" />

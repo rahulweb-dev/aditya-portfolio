@@ -14,7 +14,7 @@ export default function Hero() {
       <HeroBackdrop />
       <div className="flex min-w-0 flex-col gap-7">
         <Eyebrow>{SITE.fullName}</Eyebrow>
-        <h1 className="text-[clamp(44px,6.4vw,92px)] leading-[1.02] font-semibold tracking-[-0.035em] text-balance">
+        <h1 className="text-[clamp(44px,6.4vw,92px)] leading-[1.02] font-semibold tracking-[-0.015em] text-balance">
           Hi, I&apos;m {SITE.name}.<br />
           <span className="serif-accent text-[1.08em] text-muted">I am a</span>
         </h1>

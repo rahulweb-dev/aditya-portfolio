@@ -136,9 +136,7 @@ export default function BrandIntro() {
           </svg>
           {/* 4. what the name means */}
           <p className="intro-tagline m-0 text-center">
-            <span className="block font-serif text-[clamp(22px,3vw,30px)] text-[#F4F0E8] italic">{BRAND.tagline}</span>
-            <span className="mt-2 block font-mono text-[10px] tracking-[0.24em] text-[#F4F0E8]/55 uppercase">Aditya + Odyssey</span>
-          </p>
+            <span className="block font-serif text-[clamp(22px,3vw,30px)] text-[#F4F0E8] italic">{BRAND.tagline}</span>          </p>
         </div>
       )}
 

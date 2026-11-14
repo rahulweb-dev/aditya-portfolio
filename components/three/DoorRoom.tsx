@@ -2,6 +2,7 @@
 
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ROOMS, type Room, type SkillKey } from '@/lib/content';
 import DoorDetails from '../DoorDetails';
@@ -11,7 +12,7 @@ import { useOnScreen, useThemeColors } from './useThemeColors';
 const W = 1;
 const H = 2;
 const PITCH = 1.6;
-const CASE = 0.12;
+const CASE = 0.15;
 const LAMP_Y = H + CASE + 0.27; // wall lamp above each door
 const N = ROOMS.length;
 const doorX = (i: number) => (i - (N - 1) / 2) * PITCH;
@@ -66,12 +67,17 @@ function roundedRect(w: number, h: number, r: number) {
   return s;
 }
 
-/** Arch outline: a rectangle with a semicircle on top, standing on y = 0. */
+/**
+ * Gothic (equilateral pointed) arch standing on y = 0, total height h:
+ * straight sides, then two arcs whose radius equals the width, meeting in a point.
+ */
 function arch<T extends THREE.Path>(path: T, cx: number, w: number, h: number): T {
+  const spring = h - w * Math.sin(Math.PI / 3); // where the curve starts
   path.moveTo(cx - w / 2, 0);
   path.lineTo(cx + w / 2, 0);
-  path.lineTo(cx + w / 2, h - w / 2);
-  path.absarc(cx, h - w / 2, w / 2, 0, Math.PI, false);
+  path.lineTo(cx + w / 2, spring);
+  path.absarc(cx - w / 2, spring, w, 0, Math.PI / 3, false); // right side, up to the point
+  path.absarc(cx + w / 2, spring, w, (2 * Math.PI) / 3, Math.PI, false); // left side, back down
   path.lineTo(cx - w / 2, 0);
   return path;
 }
@@ -176,6 +182,25 @@ function Scene({ hovered, setHovered, openKey, flight, onSelect }: Props) {
   const floorMat = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.2 }), []);
   const baseMat = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.8 }), []);
   const invalidate = useThree(s => s.invalidate);
+  const gl = useThree(s => s.gl);
+  const scene = useThree(s => s.scene);
+
+  // Soft studio reflections (generated here, nothing to download) so lacquer, iron and brass read as real.
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = env;
+    invalidate();
+    return () => {
+      scene.environment = null;
+      env.dispose();
+      pmrem.dispose();
+    };
+  }, [gl, scene, invalidate]);
+  useEffect(() => {
+    scene.environmentIntensity = c.dark ? 0.28 : 0.5;
+  }, [scene, c.dark]);
+
   useEffect(() => {
     wallMat.color.set(c['scene-wall']);
     floorMat.color.set(c['scene-floor']);
@@ -321,25 +346,112 @@ function Rig({ flight }: { flight: Flight }) {
   return null;
 }
 
-/** Vertical grooves for the door leaf, tinted by the door colour. */
-function useGrooveTexture() {
+/** Painted wooden planks with grain and knots: white, so the door colour tints it. Also used for depth. */
+function useWoodTextures() {
   return useMemo(() => {
     const cv = document.createElement('canvas');
-    cv.width = 64;
-    cv.height = 4;
+    cv.width = 512;
+    cv.height = 1024;
     const g = cv.getContext('2d')!;
     g.fillStyle = '#ffffff';
-    g.fillRect(0, 0, 64, 4);
-    g.fillStyle = 'rgba(0,0,0,0.3)';
-    g.fillRect(0, 0, 5, 4);
-    g.fillStyle = 'rgba(255,255,255,0.6)';
-    g.fillRect(5, 0, 2, 4);
+    g.fillRect(0, 0, 512, 1024);
+    const planks = 7;
+    const pw = 512 / planks;
+    let seed = 7;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let p = 0; p < planks; p++) {
+      const x0 = p * pw;
+      g.fillStyle = `rgba(0,0,0,${0.02 + rand() * 0.06})`; // each plank a slightly different shade
+      g.fillRect(x0, 0, pw, 1024);
+      for (let k = 0; k < 34; k++) {
+        // grain: long, gently wavy lines
+        const gx = x0 + rand() * pw;
+        g.strokeStyle = `rgba(0,0,0,${0.03 + rand() * 0.09})`;
+        g.lineWidth = 0.6 + rand() * 1.4;
+        g.beginPath();
+        for (let y = 0; y <= 1024; y += 32) g.lineTo(gx + Math.sin(y * 0.012 + k) * (1.5 + rand() * 2.5), y);
+        g.stroke();
+      }
+      if (rand() > 0.45) {
+        // a knot
+        const ky = 120 + rand() * 780;
+        g.fillStyle = 'rgba(0,0,0,0.16)';
+        g.beginPath();
+        g.ellipse(x0 + pw * (0.3 + rand() * 0.4), ky, 6, 14, 0, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.fillStyle = 'rgba(0,0,0,0.6)'; // the gap between planks
+      g.fillRect(x0, 0, 3, 1024);
+      g.fillStyle = 'rgba(255,255,255,0.45)';
+      g.fillRect(x0 + 3, 0, 1.5, 1024);
+    }
+    const make = (srgb: boolean) => {
+      const t = new THREE.CanvasTexture(cv);
+      if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      // leaf UVs run from -width/2..width/2 and 0..height: map that onto the whole texture
+      t.repeat.set(1 / (W - 0.02), 1 / (H - 0.01));
+      t.offset.set(0.5, 0);
+      return t;
+    };
+    return { map: make(true), bump: make(false) };
+  }, []);
+}
+
+/** Leaded stained glass in diamond panes, in tints of the door's own colour plus amber. */
+function useStainedGlass(color: string) {
+  return useMemo(() => {
+    const cv = document.createElement('canvas');
+    cv.width = 256;
+    cv.height = 384;
+    const g = cv.getContext('2d')!;
+    const base = new THREE.Color(color);
+    const tint = (l: number) => `#${base.clone().offsetHSL(0, 0.05, l).getHexString()}`;
+    const grad = g.createLinearGradient(0, 0, 0, 384);
+    grad.addColorStop(0, tint(0.32));
+    grad.addColorStop(0.55, tint(0.12));
+    grad.addColorStop(1, '#ffb347');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 256, 384);
+    // diamond panes, each a little different
+    const step = 48;
+    let seed = color.length * 97;
+    const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let y = -step; y < 384 + step; y += step / 2) {
+      for (let x = -step; x < 256 + step; x += step) {
+        const cx = x + ((y / (step / 2)) % 2 ? step / 2 : 0);
+        g.fillStyle = rand() > 0.75 ? 'rgba(255,190,90,0.35)' : rand() > 0.5 ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)';
+        g.beginPath();
+        g.moveTo(cx, y - step / 2);
+        g.lineTo(cx + step / 2, y);
+        g.lineTo(cx, y + step / 2);
+        g.lineTo(cx - step / 2, y);
+        g.closePath();
+        g.fill();
+      }
+    }
+    // the lead between the panes
+    g.strokeStyle = '#141216';
+    g.lineWidth = 5;
+    for (let d = -384; d < 640; d += step) {
+      g.beginPath(); g.moveTo(d, 0); g.lineTo(d + 384 * 0.5 * 2, 384); g.stroke();
+      g.beginPath(); g.moveTo(d + 384, 0); g.lineTo(d + 384 - 384, 384); g.stroke();
+    }
     const t = new THREE.CanvasTexture(cv);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(12, 1);
     t.colorSpace = THREE.SRGBColorSpace;
     return t;
-  }, []);
+  }, [color]);
+}
+
+/** Gives a flat shape's UVs a 0..1 range across its own bounding box. */
+function normaliseUVs(geo: THREE.BufferGeometry) {
+  geo.computeBoundingBox();
+  const b = geo.boundingBox!;
+  const pos = geo.attributes.position;
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, (pos.getX(i) - b.min.x) / (b.max.x - b.min.x), (pos.getY(i) - b.min.y) / (b.max.y - b.min.y));
+  uv.needsUpdate = true;
+  return geo;
 }
 
 /** Gold name plate with engraved text. */
@@ -391,29 +503,38 @@ type DoorProps = {
 
 type SceneColors = Record<'scene-wall' | 'scene-casing' | 'scene-baseboard' | 'scene-floor', string> & { dark: boolean };
 
+// Leaf-local layout (the leaf runs from x = 0 at the hinge to LW, y = 0 to H)
+const LW = W - 0.02;
+const WIN = { w: 0.34, h: 0.5, y: 1.4 }; // stained glass window
+const STRAPS = [0.32, 1.06]; // iron strap hinges
+const RING = { x: 0.84, y: 0.97 }; // iron ring pull
+
 function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }: DoorProps) {
   const x = doorX(index);
   const focused = hovered === index;
   const faded = hovered !== null && !focused && !open;
   const leaf = useRef<THREE.Group>(null);
-  const casing = useRef<THREE.Mesh>(null);
+  const frame = useRef<THREE.Group>(null);
   const tunnel = useRef<THREE.Mesh>(null);
   const light = useRef<THREE.SpotLight>(null);
   const fade = useRef(1);
-  const grooves = useGrooveTexture();
+  const glow = useRef(0.4);
+  const wood = useWoodTextures();
+  const glassTex = useStainedGlass(room.color);
   const plateTex = usePlateTexture(room.plate);
 
   const m = useMemo(
     () => ({
-      leaf: new THREE.MeshStandardMaterial({ map: grooves, roughness: 0.65, transparent: true }),
-      casing: new THREE.MeshStandardMaterial({ roughness: 0.8, transparent: true }),
+      // lacquered painted wood: grain in the paint, a glossy clear coat on top
+      leaf: new THREE.MeshPhysicalMaterial({ map: wood.map, bumpMap: wood.bump, bumpScale: 1.2, roughness: 0.55, clearcoat: 0.6, clearcoatRoughness: 0.28, transparent: true }),
+      stone: new THREE.MeshStandardMaterial({ roughness: 0.92, transparent: true }),
+      iron: new THREE.MeshStandardMaterial({ color: '#19181d', metalness: 0.8, roughness: 0.4, transparent: true }),
+      glass: new THREE.MeshBasicMaterial({ map: glassTex, transparent: true, toneMapped: false }),
       patch: new THREE.MeshStandardMaterial({ roughness: 0.95, transparent: true, opacity: 0, depthWrite: false }),
       baseFill: new THREE.MeshStandardMaterial({ roughness: 0.8, transparent: true, opacity: 0, depthWrite: false }),
-      gold: new THREE.MeshStandardMaterial({ color: '#f0c45a', metalness: 0.35, roughness: 0.3, emissive: '#6b4a0c', transparent: true }),
-      plate: new THREE.MeshStandardMaterial({ map: plateTex, roughness: 0.4, metalness: 0.3, transparent: true }),
-      slot: new THREE.MeshBasicMaterial({ color: '#111111', transparent: true }),
+      gold: new THREE.MeshStandardMaterial({ color: '#f0c45a', metalness: 0.6, roughness: 0.3, emissive: '#4a3208', transparent: true }),
+      plate: new THREE.MeshStandardMaterial({ map: plateTex, roughness: 0.35, metalness: 0.4, transparent: true }),
       dark: new THREE.MeshBasicMaterial({ color: '#030405', side: THREE.BackSide }),
-      hinge: new THREE.MeshStandardMaterial({ color: '#4a3a24', metalness: 0.6, roughness: 0.4, transparent: true }),
       lampShade: new THREE.MeshStandardMaterial({ color: '#2b2219', metalness: 0.7, roughness: 0.35, side: THREE.DoubleSide, transparent: true }),
       bulb: new THREE.MeshBasicMaterial({ color: '#ffe4b0', transparent: true, toneMapped: false }),
       // soft light and shadow, painted with gradient textures
@@ -422,33 +543,44 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
       seam: new THREE.MeshBasicMaterial({ color: '#ffcf8a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
       shadow: new THREE.MeshBasicMaterial({ map: radial('0,0,0'), transparent: true, depthWrite: false }),
     }),
-    [grooves, plateTex],
+    [wood, glassTex, plateTex],
   );
-  const glow = useRef(0.4);
   useEffect(() => {
     m.leaf.color.set(room.color);
-    m.casing.color.set(colors['scene-casing']);
+    m.stone.color.set(colors['scene-casing']);
     m.patch.color.set(colors['scene-wall']);
     m.baseFill.color.set(colors['scene-baseboard']);
   }, [m, room.color, colors]);
 
   const geo = useMemo(() => {
-    const lw = W - 0.02;
-    const leafGeo = new THREE.ExtrudeGeometry(arch(new THREE.Shape(), 0, lw, H - 0.01), { depth: 0.05, bevelEnabled: false, curveSegments: 32 });
-    leafGeo.translate(lw / 2, 0, -0.05); // hinge on the left edge, front face at z = 0
-    const frame = arch(new THREE.Shape(), 0, W + CASE * 2, H + CASE);
-    frame.holes.push(arch(new THREE.Path(), 0, W, H));
-    const casingGeo = new THREE.ExtrudeGeometry(frame, { depth: 0.07, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.01, bevelSegments: 2, curveSegments: 32 });
-    const patchGeo = new THREE.ShapeGeometry(arch(new THREE.Shape(), 0, W + CASE * 2 + 0.04, H + CASE + 0.02), 32);
-    const tunnelGeo = new THREE.ExtrudeGeometry(arch(new THREE.Shape(), 0, W, H), { depth: 6, bevelEnabled: false, curveSegments: 32 });
+    const leafGeo = new THREE.ExtrudeGeometry(arch(new THREE.Shape(), 0, LW, H - 0.01), { depth: 0.05, bevelEnabled: false, curveSegments: 40 });
+    leafGeo.translate(LW / 2, 0, -0.05); // hinge on the left edge, front face at z = 0
+
+    // stone surround: a wide outer band and a deeper inner moulding, stepped like a cathedral door
+    const outer = arch(new THREE.Shape(), 0, W + CASE * 2, H + CASE);
+    outer.holes.push(arch(new THREE.Path(), 0, W, H));
+    const outerGeo = new THREE.ExtrudeGeometry(outer, { depth: 0.08, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 3, curveSegments: 40 });
+    const inner = arch(new THREE.Shape(), 0, W + 0.07, H + 0.04);
+    inner.holes.push(arch(new THREE.Path(), 0, W, H));
+    const innerGeo = new THREE.ExtrudeGeometry(inner, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.008, bevelSegments: 2, curveSegments: 40 });
+
+    const patchGeo = new THREE.ShapeGeometry(arch(new THREE.Shape(), 0, W + CASE * 2 + 0.04, H + CASE + 0.1), 40);
+    const tunnelGeo = new THREE.ExtrudeGeometry(arch(new THREE.Shape(), 0, W, H), { depth: 6, bevelEnabled: false, curveSegments: 40 });
     tunnelGeo.translate(0, 0, -6);
-    // Raised, bevelled panels on the door: an arched one on top and a rounded one below.
-    const bevel = { depth: 0.012, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.012, bevelSegments: 3, curveSegments: 32 };
-    const upperPanelGeo = new THREE.ExtrudeGeometry(arch(new THREE.Shape(), 0, 0.6, 0.78), bevel);
-    upperPanelGeo.translate(lw / 2, 1.06, 0);
-    const lowerPanelGeo = new THREE.ExtrudeGeometry(roundedRect(0.6, 0.5, 0.04), bevel);
-    lowerPanelGeo.translate(lw / 2, 0.47, 0);
-    return { leafGeo, casingGeo, patchGeo, tunnelGeo, upperPanelGeo, lowerPanelGeo };
+
+    // one raised panel low on the door
+    const lowerPanelGeo = new THREE.ExtrudeGeometry(roundedRect(0.62, 0.5, 0.03), { depth: 0.012, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.012, bevelSegments: 3 });
+    lowerPanelGeo.translate(LW / 2, 0.5, 0);
+
+    // pointed stained glass window and its iron frame
+    const glassGeo = normaliseUVs(new THREE.ShapeGeometry(arch(new THREE.Shape(), 0, WIN.w, WIN.h), 32));
+    glassGeo.translate(LW / 2, WIN.y, 0.004);
+    const winFrame = arch(new THREE.Shape(), 0, WIN.w + 0.05, WIN.h + 0.035);
+    winFrame.holes.push(arch(new THREE.Path(), 0, WIN.w, WIN.h));
+    const winFrameGeo = new THREE.ExtrudeGeometry(winFrame, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2, curveSegments: 32 });
+    winFrameGeo.translate(LW / 2, WIN.y - 0.018, 0);
+
+    return { leafGeo, outerGeo, innerGeo, patchGeo, tunnelGeo, lowerPanelGeo, glassGeo, winFrameGeo };
   }, []);
 
   const target = useMemo(() => new THREE.Object3D(), []);
@@ -461,19 +593,20 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
     // Fade the other doors out (and a wall-coloured patch in) when one door is hovered.
     fade.current = THREE.MathUtils.damp(fade.current, faded ? 0 : 1, 7, dt);
     const f = fade.current;
-    m.leaf.opacity = m.casing.opacity = m.gold.opacity = m.plate.opacity = m.slot.opacity = f;
-    m.hinge.opacity = m.lampShade.opacity = m.bulb.opacity = f;
+    m.leaf.opacity = m.stone.opacity = m.iron.opacity = m.gold.opacity = m.plate.opacity = m.glass.opacity = f;
+    m.lampShade.opacity = m.bulb.opacity = f;
     m.patch.opacity = m.baseFill.opacity = 1 - f;
-    // Warm light under the door and around the lamp: brighter on hover, brightest when opened.
+    // Warm light under the door, through the glass and around the lamp: brighter on hover, brightest when opened.
     glow.current = THREE.MathUtils.damp(glow.current, faded ? 0 : open ? 1 : focused ? 0.9 : 0.35, 5, dt);
     const lit = glow.current * (colors.dark ? 1 : 0.55);
     m.spill.opacity = lit * 0.9;
     m.seam.opacity = Math.min(1, lit * 1.4);
     m.halo.opacity = (0.25 + glow.current * 0.45) * f * (colors.dark ? 1 : 0.5);
     m.shadow.opacity = 0.5 * f;
+    m.glass.color.setScalar(0.55 + glow.current * 0.75);
     // A see-through frame must not hide the patch behind it, or its edges show as dark lines.
-    m.casing.depthWrite = m.leaf.depthWrite = f > 0.98;
-    if (casing.current) casing.current.visible = f > 0.01;
+    m.stone.depthWrite = m.leaf.depthWrite = m.iron.depthWrite = m.gold.depthWrite = m.plate.depthWrite = m.glass.depthWrite = f > 0.98;
+    if (frame.current) frame.current.visible = f > 0.01;
     if (tunnel.current) tunnel.current.visible = f > 0.02;
     if (leaf.current) {
       leaf.current.visible = f > 0.01;
@@ -498,6 +631,7 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
     e.stopPropagation();
     if (!busy) onSelect(room.key);
   };
+  const hit = { onPointerOver: over, onPointerOut: out, onClick: click };
 
   return (
     <group position={[x, 0, 0]}>
@@ -507,8 +641,15 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
       {/* the dark room behind the doorway: an arch-shaped tunnel, so nothing pokes out past the opening */}
       <mesh ref={tunnel} geometry={geo.tunnelGeo} material={m.dark} raycast={() => null} />
 
-      {/* frame, plus the patch that hides the doorway when this door fades out */}
-      <mesh ref={casing} geometry={geo.casingGeo} material={m.casing} onPointerOver={over} onPointerOut={out} onClick={click} />
+      {/* stone surround with a small carved diamond finial at the point */}
+      <group ref={frame}>
+        <mesh geometry={geo.outerGeo} material={m.stone} {...hit} />
+        <mesh geometry={geo.innerGeo} material={m.stone} {...hit} />
+        <mesh material={m.stone} position={[0, H + CASE + 0.03, 0.05]} rotation-z={Math.PI / 4} {...hit}>
+          <boxGeometry args={[0.075, 0.075, 0.09]} />
+        </mesh>
+      </group>
+      {/* the patch that hides the doorway when this door fades out */}
       <mesh geometry={geo.patchGeo} material={m.patch} position={[0, 0, 0.004]} renderOrder={2} raycast={() => null} />
       <mesh material={m.baseFill} position={[0, 0.07, 0.02]} renderOrder={3} raycast={() => null}>
         <boxGeometry args={[W + CASE * 2 + 0.002, 0.14, 0.04]} />
@@ -544,36 +685,47 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
 
       {/* the door leaf, hinged on its left edge */}
       <group ref={leaf} position={[-W / 2 + 0.01, 0, -0.004]}>
-        <mesh geometry={geo.leafGeo} material={m.leaf} onPointerOver={over} onPointerOut={out} onClick={click} />
-        <mesh geometry={geo.upperPanelGeo} material={m.leaf} onPointerOver={over} onPointerOut={out} onClick={click} />
-        <mesh geometry={geo.lowerPanelGeo} material={m.leaf} onPointerOver={over} onPointerOut={out} onClick={click} />
-        <mesh material={m.plate} position={[W / 2, H * 0.62, 0.026]}>
+        <mesh geometry={geo.leafGeo} material={m.leaf} {...hit} />
+        <mesh geometry={geo.lowerPanelGeo} material={m.leaf} {...hit} />
+
+        {/* stained glass, lit from the room behind */}
+        <mesh geometry={geo.glassGeo} material={m.glass} {...hit} />
+        <mesh geometry={geo.winFrameGeo} material={m.iron} {...hit} />
+
+        {/* brass name plate */}
+        <mesh material={m.plate} position={[LW / 2, H * 0.62, 0.02]}>
           <planeGeometry args={[0.5, 0.11]} />
         </mesh>
-        {/* brass kick plate and hinges */}
-        <mesh material={m.gold} position={[(W - 0.02) / 2, 0.07, 0.004]}>
-          <boxGeometry args={[W - 0.12, 0.07, 0.006]} />
-        </mesh>
-        {[0.42, 1.55].map(y => (
-          <mesh key={y} material={m.hinge} position={[0.012, y, 0.006]}>
-            <cylinderGeometry args={[0.018, 0.018, 0.13, 12]} />
-          </mesh>
+
+        {/* black iron strap hinges with rivets */}
+        {STRAPS.map(y => (
+          <group key={y}>
+            <mesh material={m.iron} position={[0.36, y, 0.012]}>
+              <boxGeometry args={[0.72, 0.05, 0.012]} />
+            </mesh>
+            <mesh material={m.iron} position={[0.72, y, 0.012]} rotation-x={Math.PI / 2}>
+              <cylinderGeometry args={[0.045, 0.045, 0.012, 24]} />
+            </mesh>
+            {[0.08, 0.26, 0.44, 0.62].map(rx => (
+              <mesh key={rx} material={m.iron} position={[rx, y, 0.02]}>
+                <sphereGeometry args={[0.011, 10, 8]} />
+              </mesh>
+            ))}
+          </group>
         ))}
-        {/* rose, lever handle and keyhole */}
-        <mesh material={m.gold} position={[W * 0.86, 0.98, 0.012]} rotation-x={Math.PI / 2}>
-          <cylinderGeometry args={[0.042, 0.042, 0.024, 24]} />
+
+        {/* iron ring pull on a round boss, with a keyhole plate below */}
+        <mesh material={m.iron} position={[RING.x, RING.y + 0.07, 0.012]} rotation-x={Math.PI / 2}>
+          <cylinderGeometry args={[0.035, 0.035, 0.02, 24]} />
         </mesh>
-        <mesh material={m.gold} position={[W * 0.86 - 0.1, 0.98, 0.04]}>
-          <boxGeometry args={[0.22, 0.028, 0.028]} />
+        <mesh material={m.iron} position={[RING.x, RING.y, 0.026]}>
+          <torusGeometry args={[0.065, 0.009, 10, 40]} />
         </mesh>
-        <mesh material={m.gold} position={[W * 0.86, 0.98, 0.026]} rotation-x={Math.PI / 2}>
-          <cylinderGeometry args={[0.014, 0.014, 0.03, 12]} />
+        <mesh material={m.iron} position={[RING.x, RING.y - 0.17, 0.006]}>
+          <boxGeometry args={[0.045, 0.09, 0.008]} />
         </mesh>
-        <mesh material={m.gold} position={[W * 0.86, 0.85, 0.004]}>
-          <boxGeometry args={[0.036, 0.078, 0.008]} />
-        </mesh>
-        <mesh material={m.slot} position={[W * 0.86, 0.852, 0.0085]}>
-          <planeGeometry args={[0.01, 0.036]} />
+        <mesh material={m.gold} position={[RING.x, RING.y - 0.165, 0.011]}>
+          <boxGeometry args={[0.01, 0.03, 0.002]} />
         </mesh>
       </group>
     </group>

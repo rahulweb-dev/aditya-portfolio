@@ -7,7 +7,7 @@ export default function Contact() {
     <section id="contact" className="flex flex-col gap-[26px] border-t border-line px-[clamp(16px,4vw,64px)] pt-24 pb-20">
       <Reveal className="flex flex-col gap-[26px]">
         <Eyebrow live>Open to new projects</Eyebrow>
-        <h2 className="text-[clamp(48px,8vw,120px)] leading-[0.98] font-semibold tracking-[-0.045em]">
+        <h2 className="text-[clamp(48px,8vw,120px)] leading-[1.06] font-semibold tracking-[-0.02em]">
           Got a project?
           <br />
           <span className="text-muted">Let&apos;s <span className="serif-accent text-fg">make it</span> together.</span>
