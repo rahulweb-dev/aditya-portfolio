@@ -38,8 +38,8 @@ export const viewport: Viewport = {
   themeColor: '#0B0A0F',
 };
 
-// Before first paint: apply the saved theme, and skip the intro if it has already played this visit.
-const bootScript = `try{var d=document.documentElement,t=localStorage.getItem('theme');if(t)d.dataset.theme=t;if(sessionStorage.getItem('introSeen')||sessionStorage.getItem('returnDoor'))d.dataset.intro='seen'}catch(e){}`;
+// Before first paint: apply the saved theme, and skip the intro when coming back through a door.
+const bootScript = `try{var d=document.documentElement,t=localStorage.getItem('theme');if(t)d.dataset.theme=t;if(sessionStorage.getItem('returnDoor'))d.dataset.intro='seen'}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

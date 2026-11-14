@@ -33,12 +33,29 @@ function parseLogo(svgText: string): LogoData | null {
   return { viewBox, pearl, red, pieces };
 }
 
+// True once the intro has played in this page load. A refresh starts a new page load,
+// so it plays again; clicking "Home" inside the site doesn't.
+let playedThisLoad = false;
+
+/** Coming back through a door (or the intro already ran): don't cover the page. */
+function shouldSkip() {
+  if (typeof window === 'undefined') return false;
+  if (playedThisLoad || document.documentElement.dataset.intro === 'seen') return true;
+  try {
+    return !!sessionStorage.getItem('returnDoor');
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Loading intro: the Adyssey logo draws itself, fills in, the red REC details pop in,
- * the aura glows, then it fades into the site. Once per visit; any click or key skips it.
+ * the aura glows, then it fades into the site. Plays on every page load; any click or key skips it.
  */
 export default function BrandIntro() {
-  const [phase, setPhase] = useState<'show' | 'leaving' | 'gone'>('show');
+  // Decided once, before anything runs (React may run the setup below twice in development).
+  const skip = useRef(shouldSkip());
+  const [phase, setPhase] = useState<'show' | 'leaving' | 'gone'>(() => (skip.current ? 'gone' : 'show'));
   const [logo, setLogo] = useState<LogoData | null>(null);
   const [reduced, setReduced] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -50,14 +67,11 @@ export default function BrandIntro() {
   }, []);
 
   useEffect(() => {
-    // Already played this visit (the boot script in layout.tsx marks it before paint).
-    if (document.documentElement.dataset.intro === 'seen') {
+    if (skip.current) {
       setPhase('gone');
       return;
     }
-    try {
-      sessionStorage.setItem('introSeen', '1');
-    } catch {}
+    playedThisLoad = true;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setReduced(reduce);
 
