@@ -21,7 +21,7 @@ export default function Contact() {
         <GhostButton href={SITE.socials[0].href}>See my ArtStation</GhostButton>
         <TextLink href={`mailto:${SITE.email}`}>Let&apos;s talk</TextLink>
       </div>
-      <dl className="mt-2 grid grid-cols-1 gap-x-12 gap-y-4 text-[15px] sm:w-fit sm:grid-cols-[repeat(3,auto)]">
+      <dl className="mt-2 grid grid-cols-1 gap-x-12 gap-y-4 text-[15px] sm:w-fit sm:grid-cols-[repeat(2,auto)] lg:grid-cols-[repeat(4,auto)]">
         <div>
           <dt className="micro-caps text-soft">Email</dt>
           <dd className="m-0 mt-1"><a href={`mailto:${SITE.email}`} className="break-all text-fg">{SITE.email}</a></dd>
@@ -29,6 +29,12 @@ export default function Contact() {
         <div>
           <dt className="micro-caps text-soft">Phone</dt>
           <dd className="m-0 mt-1"><a href={SITE.phoneHref} className="text-fg">{SITE.phone}</a></dd>
+        </div>
+        <div>
+          <dt className="micro-caps text-soft">Instagram</dt>
+          <dd className="m-0 mt-1">
+            <a href="https://www.instagram.com/the._adyssey/" target="_blank" rel="noopener noreferrer" className="text-fg">@the._adyssey</a>
+          </dd>
         </div>
         <div>
           <dt className="micro-caps text-soft">Based in</dt>

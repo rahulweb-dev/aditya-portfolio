@@ -9,7 +9,10 @@ export const SITE = {
   phoneHref: 'tel:+919059891502',
   location: 'Hyderabad, India',
   timezone: 'Asia/Kolkata',
-  socials: [{ label: 'ArtStation', href: 'https://adityavardhan1502.artstation.com' }],
+  socials: [
+    { label: 'ArtStation', href: 'https://adityavardhan1502.artstation.com' },
+    { label: 'Instagram', href: 'https://www.instagram.com/the._adyssey/' },
+  ],
 };
 
 // What "Adyssey" means: shown in the intro, the "What's in a name?" section and the footer.
