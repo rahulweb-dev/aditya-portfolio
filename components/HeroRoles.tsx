@@ -44,7 +44,9 @@ export default function HeroRoles({ name }: { name: string }) {
           key={flips}
           className={`relative flex origin-top items-end gap-5 rounded-[20px] border border-line bg-card px-5 pt-[22px] pb-[18px] shadow-[0_6px_0_-2px_var(--bg-2),0_10px_0_-4px_var(--line)] sm:px-[30px] sm:pt-[26px] sm:pb-[22px] ${flips ? 'animate-flip' : ''}`}
         >
-          <span className="serif-accent text-[clamp(34px,4.6vw,62px)] leading-none sm:whitespace-nowrap">{role.word}</span>
+          <span className="serif-accent text-[clamp(34px,4.6vw,62px)] leading-none sm:whitespace-nowrap">
+            {role.word.charAt(0).toUpperCase() + role.word.slice(1)}
+          </span>
           <span className="micro-caps pb-1 text-soft">
             <b className="text-fg">{pad(shown + 1)}</b> / {pad(ROLES.length)}
           </span>
