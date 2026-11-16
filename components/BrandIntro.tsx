@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BRAND } from '@/lib/content';
+import DesertScene from './DesertScene';
 
-const LOGO_SRC = '/brand/adyssey-logo-stacked-light.svg';
+const LOGO_SRC = '/logo/adyssey-logo-stacked-night.svg'; // cream + REC red, Red Sun kit
 const SHOW_FOR = 3700; // ms before the intro hands over to the site
 
 type Piece = { d: string; delay: number; duration: number };
@@ -17,8 +18,8 @@ function parseLogo(svgText: string): LogoData | null {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.querySelector('svg');
   const paths = [...doc.querySelectorAll('path')];
-  const pearl = paths.find(p => p.getAttribute('fill')?.toUpperCase() === '#F4F0E8')?.getAttribute('d');
-  const red = paths.find(p => p.getAttribute('fill')?.toUpperCase() === '#FF3B30')?.getAttribute('d') ?? '';
+  const pearl = paths.find(p => p.getAttribute('fill')?.toUpperCase() === '#F3EBE0')?.getAttribute('d');
+  const red = paths.find(p => p.getAttribute('fill')?.toUpperCase() === '#FF5A48')?.getAttribute('d') ?? '';
   const viewBox = svg?.getAttribute('viewBox');
   if (!pearl || !viewBox) return null;
 
@@ -102,15 +103,38 @@ export default function BrandIntro() {
     <div
       aria-hidden="true"
       onClick={leave}
-      className={`brand-intro fixed inset-0 z-[70] grid cursor-pointer place-items-center overflow-hidden bg-[#0B0A0F] transition-[opacity,scale] duration-800 ease-[cubic-bezier(0.7,0,0.2,1)] ${
+      className={`brand-intro fixed inset-0 z-[70] grid cursor-pointer place-items-center overflow-hidden bg-[#140D0E] transition-[opacity,scale] duration-800 ease-[cubic-bezier(0.7,0,0.2,1)] ${
         phase === 'leaving' ? 'pointer-events-none scale-105 opacity-0' : 'opacity-100'
       } ${reduced ? 'intro-reduced' : ''}`}
     >
-      {/* the aura: violet, pink and orange light behind the logo */}
+      {/* the Red Sun night: sky, twinkling stars and the night dunes drifting along the bottom
+          (data-theme="dark" so it is always the night scene, whatever mode the site is in) */}
+      <div data-theme="dark" className="absolute inset-0">
+        <DesertScene celestial={false} mode="dark" className="absolute inset-0 size-full" />
+      </div>
+      {/* the night-horizon glow behind the logo */}
       <div className="intro-aura absolute inset-0" />
 
       {logo && (
-        <div className="relative flex flex-col items-center gap-6">
+        <div className="relative flex -translate-y-[6vh] flex-col items-center gap-6">
+          {/* the red crescent rises behind the logo while it draws (lit on the right, as in the brand) */}
+          <div className="pointer-events-none absolute top-[38%] left-1/2 aspect-square w-[min(92vw,520px)] -translate-x-1/2 -translate-y-1/2">
+            <svg viewBox="0 0 1000 1000" className="intro-moon size-full overflow-visible">
+              <defs>
+                <radialGradient id="intro-moon-glow">
+                  <stop offset="0.45" stopColor="#7A2A2C" stopOpacity="0.75" />
+                  <stop offset="1" stopColor="#7A2A2C" stopOpacity="0" />
+                </radialGradient>
+                <mask id="intro-crescent">
+                  <rect width="1000" height="1000" fill="#fff" />
+                  <circle cx="452" cy="492" r="400" fill="#000" />
+                </mask>
+              </defs>
+              <circle className="intro-moon-glow" cx="500" cy="500" r="700" fill="url(#intro-moon-glow)" />
+              <circle cx="500" cy="500" r="400" fill="#2A1517" opacity="0.85" />
+              <circle cx="500" cy="500" r="400" fill="#D8473A" mask="url(#intro-crescent)" />
+            </svg>
+          </div>
           <svg viewBox={logo.viewBox} className="intro-logo relative w-[min(58vw,340px)] overflow-visible">
             {/* 1. a pen line traces each stroke of the logo, left to right */}
             <g className="intro-strokes">
@@ -120,7 +144,7 @@ export default function BrandIntro() {
                   d={p.d}
                   pathLength={1}
                   fill="none"
-                  stroke="#F4F0E8"
+                  stroke="#F3EBE0"
                   strokeWidth={1.4}
                   vectorEffect="non-scaling-stroke"
                   strokeLinejoin="round"
@@ -130,18 +154,21 @@ export default function BrandIntro() {
               ))}
             </g>
             {/* 2. the real shape fills in (so the counters of letters stay open) */}
-            <path d={logo.pearl} fill="#F4F0E8" className="intro-fill" />
+            <path d={logo.pearl} fill="#F3EBE0" className="intro-fill" />
             {/* 3. the red lens dot and playhead */}
-            <path d={logo.red} fill="#FF3B30" className="intro-rec" />
+            <path d={logo.red} fill="#FF5A48" className="intro-rec" />
           </svg>
           {/* 4. what the name means */}
           <p className="intro-tagline m-0 text-center">
-            <span className="block font-serif text-[clamp(22px,3vw,30px)] text-[#F4F0E8] italic">{BRAND.tagline}</span>          </p>
+            <span className="block font-display text-[clamp(22px,3vw,30px)] text-[#F3EBE0] italic">{BRAND.tagline}</span>
+            </p>
         </div>
       )}
 
-      <span className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 font-mono text-[11px] tracking-[0.14em] text-[#F4F0E8]/50 uppercase">
-        Click to skip
+      <span className="absolute bottom-[max(24px,env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-2 micro-caps text-[#C2B3A8]">
+        <span className="rec-dot rec-blink" />
+        <span className="md:hidden">Tap to skip</span>
+        <span className="hidden md:inline">Click to skip</span>
       </span>
     </div>
   );

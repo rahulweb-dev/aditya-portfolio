@@ -1,48 +1,50 @@
+/* eslint-disable @next/next/no-img-element -- the wordmark is an SVG logo file */
 import Reveal from './Reveal';
 import { Eyebrow } from './ui';
 import { BRAND } from '@/lib/content';
 
-/** "What's in a name?" Explains Adyssey like a dictionary entry: Aditya + odyssey. */
+/** "01 — What's in a name?" Explains Adyssey like a dictionary entry. The heading is the wordmark file, never typed. */
 export default function AdysseyMeaning() {
   return (
-    <section id="adyssey" aria-labelledby="adyssey-title" className="relative overflow-hidden px-[clamp(16px,4vw,64px)] py-[clamp(72px,10vw,128px)]">
-      {/* warm aura behind the word */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-1/4 left-[-10%] h-[90%] w-[70%] opacity-60 blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, color-mix(in srgb, var(--aura-violet) 28%, transparent), transparent), radial-gradient(closest-side at 70% 70%, color-mix(in srgb, var(--aura-orange) 18%, transparent), transparent)' }}
-      />
-
-      <div className="relative mx-auto grid max-w-[1240px] grid-cols-1 items-center gap-12 md:grid-cols-[1fr_1fr] md:gap-16">
+    <section id="adyssey" aria-labelledby="adyssey-title" className="px-[clamp(24px,4vw,48px)] py-[clamp(64px,8vw,96px)]">
+      <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">
         <Reveal>
-          <Eyebrow>What&apos;s in a name?</Eyebrow>
-          <h2 id="adyssey-title" className="mt-5 pb-[0.2em] font-serif text-[clamp(84px,13vw,184px)] leading-[0.95] font-normal tracking-[-0.012em] italic">
-            {BRAND.name}
+          <Eyebrow>01 — What&apos;s in a name?</Eyebrow>
+          <h2 id="adyssey-title" className="mt-6 mb-0">
+            <span className="sr-only">{BRAND.name}</span>
+            <img src="/logo/adyssey-wordmark-day.svg" alt="" width={420} height={172} className="block h-auto w-[280px] md:w-[420px] dark:hidden" />
+            <img src="/logo/adyssey-wordmark-night.svg" alt="" width={420} height={172} className="hidden h-auto w-[280px] md:w-[420px] dark:block" />
           </h2>
-          <p className="mt-4 font-mono text-[13px] tracking-[0.06em] text-soft">
-            {BRAND.phonetic} <span className="mx-2 opacity-50">·</span> <span className="italic">noun</span>
+          <p className="micro-caps mt-6 text-soft">
+            {BRAND.phonetic} <span className="mx-2">·</span> <span className="normal-case italic">noun</span>
           </p>
 
-          {/* the equation, as stickers */}
-          <div className="mt-8 flex flex-wrap items-center gap-3 text-[15px] font-medium">
-            <span className="-rotate-3 rounded-full border border-line bg-card px-4 py-2 shadow-[3px_3px_0_0_var(--aura-violet)]">Aditya</span>
+          {/* the equation */}
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <span className="label-caps rounded-full border border-line-strong px-4 py-2.5">Aditya</span>
             <span aria-hidden="true" className="text-xl text-soft">+</span>
-            <span className="rotate-2 rounded-full border border-line bg-card px-4 py-2 shadow-[3px_3px_0_0_var(--aura-pink)]">Odyssey</span>
+            <span className="label-caps rounded-full border border-line-strong px-4 py-2.5">Odyssey</span>
             <span aria-hidden="true" className="text-xl text-soft">=</span>
-            <span className="-rotate-1 rounded-full bg-fg px-4 py-2 font-serif text-[19px] text-bg italic shadow-[3px_3px_0_0_var(--rec)]">Adyssey</span>
+            {/* the name as the wordmark file on an ink (day) or cream (night) pill */}
+            <span className="inline-flex rounded-full bg-action px-4 py-2">
+              <img src="/logo/adyssey-wordmark-night.svg" alt="Adyssey" width={96} height={39} className="block h-auto w-24 dark:hidden" />
+              <img src="/logo/adyssey-wordmark-day.svg" alt="Adyssey" width={96} height={39} className="hidden h-auto w-24 dark:block" />
+            </span>
           </div>
         </Reveal>
 
-        <Reveal delay={120}>
+        <Reveal delay={80}>
           <ol className="m-0 grid list-none gap-6 border-l border-line p-0 pl-7">
             {BRAND.senses.map((sense, i) => (
               <li key={sense} className="grid grid-cols-[28px_minmax(0,1fr)] gap-2">
-                <span className="font-mono text-xs text-rec">{i + 1}.</span>
-                <p className={`m-0 leading-snug ${i === 1 ? 'text-[clamp(22px,2.4vw,32px)] font-semibold tracking-[-0.02em]' : 'text-[clamp(16px,1.4vw,19px)] text-soft'}`}>{sense}</p>
+                <span className="label-caps pt-1.5 text-rec">{i + 1}.</span>
+                <p className={`m-0 ${i === 1 ? 'font-display text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-medium' : 'text-[17px] leading-[30px] text-soft'}`}>{sense}</p>
               </li>
             ))}
           </ol>
-          <p className="mt-10 font-serif text-[clamp(26px,3vw,40px)] leading-tight italic">“{BRAND.signoff}”</p>
+          <p className="mt-10 font-display text-[clamp(26px,3vw,38px)] leading-tight">
+            “<span className="serif-accent">{BRAND.signoff}</span>”
+          </p>
         </Reveal>
       </div>
     </section>

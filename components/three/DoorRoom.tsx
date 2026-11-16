@@ -131,7 +131,7 @@ export default function DoorRoom(props: Props) {
             <div key={room.key}>
               <div ref={el => { pills.current[i] = el; }} className="absolute top-0 left-0 will-change-transform">
                 <span
-                  className={`block -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium whitespace-nowrap text-[#15171a] shadow-md transition-opacity duration-300 ${
+                  className={`block -translate-x-1/2 -translate-y-1/2 label-caps rounded-full bg-[#E3CFAE] px-3 py-1.5 whitespace-nowrap text-[#140D0E] transition-opacity duration-300 ${
                     showing ? 'opacity-100' : 'opacity-0'
                   }`}
                 >
@@ -175,7 +175,9 @@ function LabelTracker({ pills, details }: { pills: React.RefObject<(HTMLDivEleme
 }
 
 function Scene({ hovered, setHovered, openKey, flight, onSelect }: Props) {
-  const c = useThemeColors(['scene-wall', 'scene-casing', 'scene-baseboard', 'scene-floor']);
+  // The doors are a night scene in both modes (the brand's dark section), so the lighting is always night.
+  const themed = useThemeColors(['scene-wall', 'scene-casing', 'scene-baseboard', 'scene-floor']);
+  const c = useMemo(() => ({ ...themed, dark: true }), [themed]);
 
   const wallMat = useMemo(() => new THREE.MeshStandardMaterial({ roughness: 0.95 }), []);
   // A slightly polished floor, so the door lights catch on it.
@@ -283,7 +285,7 @@ function Dust({ dark }: { dark: boolean }) {
     [],
   );
   useEffect(() => {
-    material.color.set(dark ? '#ffe2b0' : '#9c8460');
+    material.color.set(dark ? '#E3CFAE' : '#9C7A58');
     material.opacity = dark ? 0.6 : 0.35;
     material.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
     material.needsUpdate = true;
@@ -408,9 +410,9 @@ function useStainedGlass(color: string) {
     const base = new THREE.Color(color);
     const tint = (l: number) => `#${base.clone().offsetHSL(0, 0.05, l).getHexString()}`;
     const grad = g.createLinearGradient(0, 0, 0, 384);
-    grad.addColorStop(0, tint(0.32));
-    grad.addColorStop(0.55, tint(0.12));
-    grad.addColorStop(1, '#ffb347');
+    grad.addColorStop(0, '#D8473A');
+    grad.addColorStop(0.55, '#7A2A2C');
+    grad.addColorStop(1, '#E3CFAE');
     g.fillStyle = grad;
     g.fillRect(0, 0, 256, 384);
     // diamond panes, each a little different
@@ -462,12 +464,12 @@ function usePlateTexture(text: string) {
     cv.height = 112;
     const g = cv.getContext('2d')!;
     const grad = g.createLinearGradient(0, 0, 512, 112);
-    grad.addColorStop(0, '#f8dd85');
-    grad.addColorStop(0.55, '#c99a2e');
-    grad.addColorStop(1, '#f3d27a');
+    grad.addColorStop(0, '#E3CFAE');
+    grad.addColorStop(0.55, '#9C7A58');
+    grad.addColorStop(1, '#E0CDAF');
     g.fillStyle = grad;
     g.fillRect(0, 0, 512, 112);
-    g.strokeStyle = 'rgba(110,75,10,0.6)';
+    g.strokeStyle = 'rgba(51,35,26,0.55)';
     g.lineWidth = 6;
     g.strokeRect(3, 3, 506, 106);
     let size = 44;
@@ -479,9 +481,9 @@ function usePlateTexture(text: string) {
     }
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.fillStyle = 'rgba(255,240,190,0.7)';
+    g.fillStyle = 'rgba(243,235,224,0.6)';
     g.fillText(label, 256, 58);
-    g.fillStyle = '#3b2a07';
+    g.fillStyle = '#33231A';
     g.fillText(label, 256, 56);
     const t = new THREE.CanvasTexture(cv);
     t.colorSpace = THREE.SRGBColorSpace;
@@ -520,8 +522,14 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
   const fade = useRef(1);
   const glow = useRef(0.4);
   const wood = useWoodTextures();
-  const glassTex = useStainedGlass(room.color);
+  const glassTex = useStainedGlass('#B8241B');
   const plateTex = usePlateTexture(room.plate);
+  const invalidateRoom = useThree(st => st.invalidate);
+  const emblemTex = useMemo(() => {
+    const t = new THREE.TextureLoader().load(`/icons/icon-${room.key}-night.svg`, () => invalidateRoom());
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }, [room.key, invalidateRoom]);
 
   const m = useMemo(
     () => ({
@@ -532,18 +540,19 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
       glass: new THREE.MeshBasicMaterial({ map: glassTex, transparent: true, toneMapped: false }),
       patch: new THREE.MeshStandardMaterial({ roughness: 0.95, transparent: true, opacity: 0, depthWrite: false }),
       baseFill: new THREE.MeshStandardMaterial({ roughness: 0.8, transparent: true, opacity: 0, depthWrite: false }),
-      gold: new THREE.MeshStandardMaterial({ color: '#f0c45a', metalness: 0.6, roughness: 0.3, emissive: '#4a3208', transparent: true }),
+      gold: new THREE.MeshStandardMaterial({ color: '#C6A684', metalness: 0.7, roughness: 0.32, emissive: '#33231A', transparent: true }),
       plate: new THREE.MeshStandardMaterial({ map: plateTex, roughness: 0.35, metalness: 0.4, transparent: true }),
+      emblem: new THREE.MeshBasicMaterial({ map: emblemTex, transparent: true, depthWrite: false, toneMapped: false }),
       dark: new THREE.MeshBasicMaterial({ color: '#030405', side: THREE.BackSide }),
       lampShade: new THREE.MeshStandardMaterial({ color: '#2b2219', metalness: 0.7, roughness: 0.35, side: THREE.DoubleSide, transparent: true }),
-      bulb: new THREE.MeshBasicMaterial({ color: '#ffe4b0', transparent: true, toneMapped: false }),
+      bulb: new THREE.MeshBasicMaterial({ color: '#F3EBE0', transparent: true, toneMapped: false }),
       // soft light and shadow, painted with gradient textures
-      halo: new THREE.MeshBasicMaterial({ map: radial('255,214,150'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
-      spill: new THREE.MeshBasicMaterial({ map: radial('255,196,120'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
-      seam: new THREE.MeshBasicMaterial({ color: '#ffcf8a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+      halo: new THREE.MeshBasicMaterial({ map: radial('227,207,174'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+      spill: new THREE.MeshBasicMaterial({ map: radial('227,207,174'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+      seam: new THREE.MeshBasicMaterial({ color: '#E3CFAE', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
       shadow: new THREE.MeshBasicMaterial({ map: radial('0,0,0'), transparent: true, depthWrite: false }),
     }),
-    [wood, glassTex, plateTex],
+    [wood, glassTex, plateTex, emblemTex],
   );
   useEffect(() => {
     m.leaf.color.set(room.color);
@@ -593,7 +602,7 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
     // Fade the other doors out (and a wall-coloured patch in) when one door is hovered.
     fade.current = THREE.MathUtils.damp(fade.current, faded ? 0 : 1, 7, dt);
     const f = fade.current;
-    m.leaf.opacity = m.stone.opacity = m.iron.opacity = m.gold.opacity = m.plate.opacity = m.glass.opacity = f;
+    m.leaf.opacity = m.stone.opacity = m.iron.opacity = m.gold.opacity = m.plate.opacity = m.glass.opacity = m.emblem.opacity = f;
     m.lampShade.opacity = m.bulb.opacity = f;
     m.patch.opacity = m.baseFill.opacity = 1 - f;
     // Warm light under the door, through the glass and around the lamp: brighter on hover, brightest when opened.
@@ -636,7 +645,7 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
   return (
     <group position={[x, 0, 0]}>
       <primitive object={target} position={[0, 0.9, 0]} />
-      <spotLight ref={light} position={[0, 3.6, 1.8]} target={target} angle={0.55} penumbra={0.85} decay={1.2} distance={9} color="#fff3dc" intensity={0} />
+      <spotLight ref={light} position={[0, 3.6, 1.8]} target={target} angle={0.55} penumbra={0.85} decay={1.2} distance={9} color="#F3EBE0" intensity={0} />
 
       {/* the dark room behind the doorway: an arch-shaped tunnel, so nothing pokes out past the opening */}
       <mesh ref={tunnel} geometry={geo.tunnelGeo} material={m.dark} raycast={() => null} />
@@ -687,6 +696,10 @@ function Door({ room, index, hovered, open, busy, colors, setHovered, onSelect }
       <group ref={leaf} position={[-W / 2 + 0.01, 0, -0.004]}>
         <mesh geometry={geo.leafGeo} material={m.leaf} {...hit} />
         <mesh geometry={geo.lowerPanelGeo} material={m.leaf} {...hit} />
+        {/* the craft's symbol, in sand, on the lower panel */}
+        <mesh material={m.emblem} position={[LW / 2, 0.5, 0.022]} raycast={() => null}>
+          <planeGeometry args={[0.26, 0.26]} />
+        </mesh>
 
         {/* stained glass, lit from the room behind */}
         <mesh geometry={geo.glassGeo} material={m.glass} {...hit} />

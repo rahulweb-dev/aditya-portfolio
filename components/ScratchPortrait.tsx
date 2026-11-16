@@ -116,7 +116,7 @@ export default function ScratchPortrait({ src, alt }: { src: string; alt: string
   };
 
   return (
-    <div ref={boxRef} className="relative aspect-4/5 overflow-hidden rounded-[22px]">
+    <div ref={boxRef} className="relative aspect-4/5 overflow-hidden rounded-[20px]">
       <Image src={src} alt={alt} fill priority sizes="(max-width: 768px) 100vw, 460px" className={`object-cover ${ready ? '' : 'grayscale'}`} />
       <canvas
         ref={canvasRef}
@@ -127,7 +127,7 @@ export default function ScratchPortrait({ src, alt }: { src: string; alt: string
         className={`absolute inset-0 size-full cursor-crosshair touch-pan-y transition-opacity duration-700 ${ready ? '' : 'invisible'} ${done ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
       />
       <span
-        className={`pointer-events-none absolute bottom-[18px] left-[18px] rounded-full bg-[rgba(16,17,20,0.8)] px-3 py-1.5 font-mono text-[11px] text-[#f3f3f1] transition-opacity duration-500 ${
+        className={`micro-caps pointer-events-none absolute top-11 left-[18px] rounded-full border border-line-on-dark bg-dark/90 px-3 py-2 text-on-dark transition-opacity duration-500 ${
           ready && !started ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -136,12 +136,12 @@ export default function ScratchPortrait({ src, alt }: { src: string; alt: string
 
       {/* Camera viewfinder: corner brackets and a recording light */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-3.5">
-        <span className="absolute top-0 left-0 size-6 border-t-2 border-l-2 border-white/75" />
-        <span className="absolute top-0 right-0 size-6 border-t-2 border-r-2 border-white/75" />
-        <span className="absolute bottom-0 left-0 size-6 border-b-2 border-l-2 border-white/75" />
-        <span className="absolute right-0 bottom-0 size-6 border-r-2 border-b-2 border-white/75" />
-        <span className="absolute top-2 right-9 flex items-center gap-2 font-mono text-[10px] tracking-[0.14em] text-white/90 uppercase [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
-          <span className="rec-blink size-2 rounded-full bg-rec" />
+        <span className="absolute top-0 left-0 size-6 border-t-2 border-l-2 border-[#F3EBE0]/75" />
+        <span className="absolute top-0 right-0 size-6 border-t-2 border-r-2 border-[#F3EBE0]/75" />
+        <span className="absolute bottom-0 left-0 size-6 border-b-2 border-l-2 border-[#F3EBE0]/75" />
+        <span className="absolute right-0 bottom-0 size-6 border-r-2 border-b-2 border-[#F3EBE0]/75" />
+        <span className="micro-caps absolute top-2 right-9 flex items-center gap-2 text-[#F3EBE0] [text-shadow:0_1px_3px_rgba(0,0,0,0.6)]">
+          <span className="rec-dot rec-blink bg-rec-on-dark" />
           Rec
           <span className="opacity-60">4K · 24 fps</span>
         </span>

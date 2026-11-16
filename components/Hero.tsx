@@ -1,60 +1,57 @@
-import RoleNotebook from './RoleNotebook';
+import HeroRoles from './HeroRoles';
 import ScratchPortrait from './ScratchPortrait';
 import AbilityCard from './AbilityCard';
-import HeroBackdrop from './HeroBackdrop';
+import DesertScene from './DesertScene';
+import HeroFilm from './HeroFilm';
 import { Eyebrow, GhostButton, SolidButton } from './ui';
-import { BRAND, SITE } from '@/lib/content';
+import { SITE } from '@/lib/content';
 
+/**
+ * The hero: the living desert (red sun by day, red crescent by night, same spot), with a soft fade of the
+ * page colour so the words sit on the calm sky. Words left, the sun between, the portrait right, its top
+ * level with the name. It runs up behind the transparent header.
+ */
 export default function Hero() {
   return (
     <section
       id="home"
-      className="relative isolate grid min-h-[min(860px,calc(100vh-70px))] grid-cols-1 items-center gap-8 px-[clamp(16px,4vw,64px)] pt-10 pb-24 md:grid-cols-[1.1fr_0.9fr]"
+      className="relative isolate -mt-16 grid min-h-[min(900px,100vh)] grid-cols-1 items-start gap-10 px-[clamp(24px,4vw,48px)] pt-32 pb-28 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16 md:pt-36"
     >
-      <HeroBackdrop />
-      <div className="flex min-w-0 flex-col gap-7">
+      <DesertScene />
+      <HeroFilm />
+      <div aria-hidden="true" className="desert-fade absolute inset-0 -z-10" />
+
+      <div className="flex min-w-0 flex-col gap-6">
         <Eyebrow>{SITE.fullName}</Eyebrow>
-        <h1 className="text-[clamp(44px,6.4vw,92px)] leading-[1.02] font-semibold tracking-[-0.015em] text-balance">
-          Hi, I&apos;m {SITE.name}.<br />
-          <span className="serif-accent text-[1.08em] text-muted">I am a</span>
-        </h1>
-        <RoleNotebook />
-        <div className="flex flex-wrap items-center gap-3">
+        <HeroRoles name={SITE.name} />
+        <p className="m-0 max-w-[46ch] text-[17px] leading-[30px] text-soft">
+          Graphic designer, photographer, videographer and AI creator in {SITE.location}.
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
           <SolidButton href="#contact">Start a project</SolidButton>
           <GhostButton href="#work">See my work</GhostButton>
         </div>
       </div>
 
       {/* Scratch card: black and white until the visitor rubs the colour through */}
-      <div className="relative w-full max-w-[420px] md:max-w-[460px] md:justify-self-end">
-        <ScratchPortrait src="/assets/aditya.jpg" alt={`${SITE.fullName} sitting among plants, looking over his shoulder`} />
-        <AbilityCard />
-        <SpinBadge />
-      </div>
+      <figure className="m-0 w-full max-w-[380px] md:w-[clamp(280px,24vw,360px)]">
+        <div className="relative">
+          <ScratchPortrait src="/assets/aditya.jpg" alt={`${SITE.fullName} sitting among plants, looking over his shoulder`} />
+          <AbilityCard />
+        </div>
+        <figcaption className="micro-caps mt-3 flex justify-between gap-3 text-soft">
+          <span>Frame 01 · {SITE.name}</span>
+          <span>{SITE.location}</span>
+        </figcaption>
+      </figure>
 
-      <p className="absolute bottom-7 left-[clamp(16px,4vw,64px)] m-0 rounded-full bg-bg/90 px-2.5 py-1 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase md:left-1/2 md:-translate-x-1/2">
+      <p className="micro-caps absolute bottom-8 left-[clamp(24px,4vw,48px)] m-0 flex items-center gap-2 rounded-full bg-[#140D0E]/85 px-3 py-2 text-on-dark">
+        <span className="rec-dot rec-blink" />
         Based in {SITE.location}
       </p>
-      <a href="#adyssey" className="absolute right-[clamp(16px,4vw,64px)] bottom-7 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase no-underline">
+      <a href="#adyssey" className="micro-caps absolute right-[clamp(24px,4vw,48px)] bottom-8 hidden rounded-full bg-[#140D0E]/85 px-3 py-2 text-on-dark no-underline md:block">
         Scroll to explore ↓
       </a>
     </section>
-  );
-}
-
-/** Retro rotating badge with the brand line around it and a REC dot in the middle. */
-function SpinBadge() {
-  return (
-    <div aria-hidden="true" className="pointer-events-none absolute -top-11 -left-11 z-10 hidden size-[124px] rounded-full bg-bg shadow-soft md:block">
-      <svg viewBox="0 0 124 124" className="spin-slow size-full">
-        <defs>
-          <path id="badge-circle" d="M62 62 m-46 0 a46 46 0 1 1 92 0 a46 46 0 1 1 -92 0" />
-        </defs>
-        <text className="fill-fg font-mono text-[10.5px] tracking-[0.2em] uppercase">
-          <textPath href="#badge-circle">{BRAND.name} ✶ visual adventures ✶ </textPath>
-        </text>
-      </svg>
-      <span className="absolute inset-0 m-auto size-3 rounded-full bg-rec" />
-    </div>
   );
 }

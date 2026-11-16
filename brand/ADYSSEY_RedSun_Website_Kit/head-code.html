@@ -1,0 +1,86 @@
+<!-- ADYSSEY · Red Sun website kit
+     Copy every file from 04_Favicon_and_App_Icons and 05_Link_Preview/og-image-day-1200x630.jpg
+     into your site's public folder. Put the logo SVGs you use in public/logo and the hero .webp files in public/hero.
+     Replace https://YOUR-SITE.com with your real website address. -->
+
+<!-- ===== Part 1: inside <head> ===== -->
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#B8241B">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#F4EEE5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#140D0E" media="(prefers-color-scheme: dark)">
+<title>Adyssey — G.L. Aditya Vardhan | Graphic Designer &amp; Photographer</title>
+
+<!-- Link preview for WhatsApp, LinkedIn, Facebook and X (the day image is the default) -->
+<meta property="og:image" content="https://YOUR-SITE.com/og-image-day-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Adyssey: graphic designer, photographer, videographer and AI creator">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://YOUR-SITE.com/og-image-day-1200x630.jpg">
+
+
+<!-- ===== Part 2: the header logo (use A or B, not both) ===== -->
+
+<!-- Option A: one file that follows the visitor's light/dark setting -->
+<a href="/" aria-label="Adyssey home"><img src="/logo/adyssey-logo-horizontal-auto.svg" alt="Adyssey" width="160"></a>
+
+<!-- Option B: two files, for a site with the sun and moon switch (Part 4) -->
+<!--
+<a href="/" aria-label="Adyssey home">
+  <img class="logo-day" src="/logo/adyssey-logo-horizontal-day.svg" alt="Adyssey" width="160">
+  <img class="logo-night" src="/logo/adyssey-logo-horizontal-night.svg" alt="" width="160">
+</a>
+-->
+
+
+<!-- ===== Part 3: in your stylesheet ===== -->
+<style>
+:root {
+  --surface: #F4EEE5; --surface-raised: #FBF8F2; --surface-high: #EBE1D3;
+  --text: #15131C; --text-muted: #5F5A52; --line: #DDD0BF; --line-strong: #8A7B6B;
+  --action: #15131C; --on-action: #F4EEE5; --rec: #B8241B; --link: #A3241B; --focus: #A3241B;
+  --section-dark: #140D0E; --text-on-dark: #F3EBE0; --muted-on-dark: #C2B3A8; --icon-on-dark: #E3CFAE;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-mode="day"]) {
+  --surface: #140D0E; --surface-raised: #22171A; --surface-high: #2E2124;
+  --text: #F3EBE0; --text-muted: #C2B3A8; --line: #3A2A2C; --line-strong: #8C7670;
+  --action: #F3EBE0; --on-action: #140D0E; --rec: #FF5A48; --link: #E35A52; --focus: #E3CFAE;
+  --section-dark: #22171A; color-scheme: dark;
+} }
+:root[data-mode="night"] {
+  --surface: #140D0E; --surface-raised: #22171A; --surface-high: #2E2124;
+  --text: #F3EBE0; --text-muted: #C2B3A8; --line: #3A2A2C; --line-strong: #8C7670;
+  --action: #F3EBE0; --on-action: #140D0E; --rec: #FF5A48; --link: #E35A52; --focus: #E3CFAE;
+  --section-dark: #22171A; color-scheme: dark;
+}
+body { background: var(--surface); color: var(--text); transition: background-color .6s, color .6s; }
+
+/* The hero: the desert scene, with a soft fade behind the words on the calm sky */
+.hero { background: url(/hero/hero-redsun-day-1920x1080.webp) 70% 40% / cover; }
+:root[data-mode="night"] .hero { background-image: url(/hero/hero-redsun-night-1920x1080.webp); }
+@media (prefers-color-scheme: dark) { :root:not([data-mode="day"]) .hero { background-image: url(/hero/hero-redsun-night-1920x1080.webp); } }
+
+.logo-night { display: none; }
+:root[data-mode="night"] .logo-day { display: none; }
+:root[data-mode="night"] .logo-night { display: inline; }
+</style>
+
+
+<!-- ===== Part 4 (option B only): just before </body> — the sun and moon switch ===== -->
+<!--
+<button type="button" class="mode-switch" aria-label="Light and dark mode">☀ / ☾</button>
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem('mode');
+  if (saved) root.dataset.mode = saved;
+  document.querySelector('.mode-switch').addEventListener('click', () => {
+    const night = root.dataset.mode ? root.dataset.mode === 'night' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.mode = night ? 'day' : 'night';
+    localStorage.setItem('mode', root.dataset.mode);
+  });
+</script>
+-->

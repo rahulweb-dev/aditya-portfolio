@@ -20,6 +20,8 @@ For the real (faster) version: `npm run build` then `npm start`.
 
 ## Brand
 
-- `brand/ADYSSEY_Logo_Website_Kit/`: the full Adyssey logo kit and its guide (not published with the site).
-- `public/brand/`: the logos and hero images the site uses. Favicons, app icons, `site.webmanifest` and the link-preview image sit in `public/`.
+- `brand/ADYSSEY_RedSun_Website_Kit/`: the Red Sun kit (day and night logos, badges, craft icons, favicons, link previews, hero scenes, `head-code.html`). Not published with the site.
+- `brand/ADYSSEY_Logo_Website_Kit/`: the first kit, retired (its red #FF3B30 and aura pictures are no longer used).
+- `public/logo/`, `public/icons/`, `public/hero/`: the logos, craft icons and desert scenes the site uses. Favicons, app icons, `site.webmanifest` and the link-preview image sit in `public/`.
+- Colours, type and rules follow the Adyssey design system (Red Sun): paper, ink and sun red by day; night, cream and REC red by night; Bodoni Moda and Space Mono; no orange, violet or pink.
 - Link previews need the site's address: set `NEXT_PUBLIC_SITE_URL` (for example `https://adyssey.com`). On Vercel it is filled in automatically.

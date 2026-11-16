@@ -25,8 +25,13 @@ export const BRAND = {
   signoff: 'It’s my journey, my adventure and my story.',
 };
 
-// The flipping word in "I am a …"
-export const ROLES = ['Photographer', 'Graphic Designer', 'Video Editor', 'AI Content Creator'];
+// The italic word in 'I am a …', in the order of the crafts. 'an' before AI.
+export const ROLES = [
+  { article: 'a', word: 'graphic designer' },
+  { article: 'a', word: 'photographer' },
+  { article: 'a', word: 'videographer' },
+  { article: 'an', word: 'AI creator' },
+];
 
 // "My ability card" in the hero
 export const ABILITIES = [
@@ -70,7 +75,7 @@ export const ROOMS: Room[] = [
     key: 'design',
     nav: 'Graphic Design',
     plate: 'Graphic Design',
-    color: '#b8321f', // vermilion poster red: the ink of print and posters
+    color: '#6B4C36', // walnut (dune-day-4): the doors share one wood; the craft icon tells them apart
     title: 'Graphic Design',
     motto: 'One brand, every format',
     lead: 'Social media posts, carousels, ad creatives and print, designed to keep every brand consistent.',
@@ -114,7 +119,7 @@ export const ROOMS: Room[] = [
     key: 'photo',
     nav: 'Photography',
     plate: 'Photography',
-    color: '#1e3f78', // cyanotype Prussian blue: one of the first photographic prints
+    color: '#6B4C36',
     title: 'Photography & Photo Editing',
     motto: 'Every pixel, considered',
     lead: 'Photographs and edits that tell a story, with a consistent look from the shoot to the final grade.',
@@ -143,7 +148,7 @@ export const ROOMS: Room[] = [
     key: 'video',
     nav: 'Videography',
     plate: 'Videography',
-    color: '#14624a', // emerald: a deep take on the green screen
+    color: '#6B4C36',
     title: 'Videography & Video Editing',
     motto: 'From the first frame to the final cut',
     lead: 'Footage shot and cut into reels and social media videos, in Premiere Pro, After Effects and CapCut.',
@@ -182,7 +187,7 @@ export const ROOMS: Room[] = [
     key: 'ai',
     nav: 'AI Creator',
     plate: 'AI Creator',
-    color: '#5b2db3', // ultraviolet: synthetic, electric violet
+    color: '#6B4C36',
     title: 'AI Creator',
     motto: 'The idea first, the tools second',
     lead: 'AI-generated videos and visuals, and AI tools that raise quality and speed up production.',

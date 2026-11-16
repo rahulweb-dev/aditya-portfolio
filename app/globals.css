@@ -1,100 +1,116 @@
 @import 'tailwindcss';
 
-/* Dark mode follows the pull cord, which sets data-theme on <html>. */
+/* Dark mode is "night". It follows the device setting until the visitor uses the sun and moon switch;
+   either way the result is data-theme on <html>. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
-/* Adyssey brand palette (brand/ADYSSEY_Logo_Website_Kit, page 3):
-   Pearl #F4F0E8, Obsidian #0B0A0F, Ink #15131C, REC red #FF3B30,
-   aura violet #8B6BFF, aura pink #FF4FD8, aura orange #FF8A3D. */
+/* Adyssey · Red Sun (brand/ADYSSEY_RedSun_Website_Kit and the Adyssey design system).
+   Day: paper, ink and one red. Night: night, cream and one red. No orange, violet or pink. */
 :root {
-  --bg: #f4f0e8; /* Pearl */
-  --bg-2: #ebe6dc;
-  --fg: #15131c; /* Ink */
-  --muted: #9a948b;
-  --soft: #5c5762;
-  --line: #dad3c6;
-  --card: #fbf9f5;
-  --wall: #e8e2d6;
-  --casing: #c8c1b4;
-  --gold: #e3b84f;
-  --live: #3fbf6a;
-  --rec: #ff3b30;
-  --aura-violet: #8b6bff;
-  --aura-pink: #ff4fd8;
-  --aura-orange: #ff8a3d;
-  --shadow-color: rgba(21, 19, 28, 0.32);
-  --scene-wall: #dcd6ca;
-  --scene-casing: #c6bfb2;
-  --scene-baseboard: #bab3a6;
-  --scene-floor: #cdc6b9;
-  --vignette: 14%;
-  --grain: 0.05;
+  --bg: #f4eee5; /* surface: Paper */
+  --bg-2: #ebe1d3; /* surface-high: hover fill */
+  --card: #fbf8f2; /* surface-raised: cards, inputs */
+  --fg: #15131c; /* text: Ink */
+  --soft: #5f5a52; /* text-muted: captions, dates */
+  --muted: #5f5a52;
+  --line: #ddd0bf; /* quiet dividers */
+  --line-strong: #8a7b6b; /* borders of things you can click */
+  --action: #15131c;
+  --on-action: #f4eee5;
+  --rec: #b8241b; /* sun red: REC dot, live status, current item */
+  --link: #a3241b; /* deep red: links and the one italic phrase */
+  --focus: #a3241b;
+  --sand: #e3cfae;
+  --sun-red: #b8241b;
+  --crescent-red: #d8473a;
+  --glow-night: #7a2a2c;
+  /* Dark sections (menus, doors, footer) borrow the night in both modes */
+  --section-dark: #140d0e;
+  --text-on-dark: #f3ebe0;
+  --muted-on-dark: #c2b3a8;
+  --line-on-dark: #3a2a2c;
+  --icon-on-dark: #e3cfae;
+  --rec-on-dark: #ff5a48;
+  --shadow-color: rgba(21, 19, 28, 0.16);
+  /* The doors room is a night scene in both modes */
+  --scene-wall: #22171a;
+  --scene-casing: #3a2826;
+  --scene-baseboard: #2c1e1d;
+  --scene-floor: #170f0f;
+  --vignette: 55%;
+  --grain: 0;
   color-scheme: light;
 }
 
 [data-theme='dark'] {
-  --bg: #0b0a0f; /* Obsidian */
-  --bg-2: #15131c; /* Ink */
-  --fg: #f4f0e8; /* Pearl */
-  --muted: #8a8594;
-  --soft: #bab4c4;
-  --line: #2a2733;
-  --card: #17151f;
-  --wall: #121018;
-  --casing: #4a4655;
-  --shadow-color: rgba(0, 0, 0, 0.75);
-  --scene-wall: #24212c;
-  --scene-casing: #403c4b;
-  --scene-baseboard: #312e3a;
-  --scene-floor: #18161f;
-  --vignette: 55%;
-  --grain: 0.08;
+  --bg: #140d0e; /* surface: Night */
+  --bg-2: #2e2124;
+  --card: #22171a;
+  --fg: #f3ebe0; /* text: Cream */
+  --soft: #c2b3a8;
+  --muted: #c2b3a8;
+  --line: #3a2a2c;
+  --line-strong: #8c7670;
+  --action: #f3ebe0;
+  --on-action: #140d0e;
+  --rec: #ff5a48; /* REC red */
+  --link: #e35a52; /* night red */
+  --focus: #e3cfae;
+  --section-dark: #22171a;
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --grain: 0.07;
   color-scheme: dark;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-2: var(--bg-2);
-  --color-fg: var(--fg);
-  --color-muted: var(--muted);
-  --color-soft: var(--soft);
-  --color-line: var(--line);
   --color-card: var(--card);
-  --color-wall: var(--wall);
-  --color-gold: var(--gold);
-  --color-live: var(--live);
+  --color-fg: var(--fg);
+  --color-soft: var(--soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
   --color-rec: var(--rec);
-  --color-aura-violet: var(--aura-violet);
-  --color-aura-pink: var(--aura-pink);
-  --color-aura-orange: var(--aura-orange);
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, Consolas, monospace;
-  --font-serif: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
-  --font-display: var(--font-bricolage), var(--font-geist-sans), system-ui, sans-serif;
-  --shadow-soft: 0 18px 40px -18px var(--shadow-color);
+  --color-link: var(--link);
+  --color-sand: var(--sand);
+  --color-sun-red: var(--sun-red);
+  --color-crescent-red: var(--crescent-red);
+  --color-dark: var(--section-dark);
+  --color-on-dark: var(--text-on-dark);
+  --color-muted-on-dark: var(--muted-on-dark);
+  --color-line-on-dark: var(--line-on-dark);
+  --color-icon-on-dark: var(--icon-on-dark);
+  --color-rec-on-dark: var(--rec-on-dark);
+  /* Bodoni Moda for headlines, Space Mono for everything else, Water Brush for the one signature */
+  --font-display: var(--font-bodoni), 'Bodoni 72', Didot, Georgia, serif;
+  --font-serif: var(--font-bodoni), 'Bodoni 72', Didot, Georgia, serif;
+  --font-sans: var(--font-space-mono), ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: var(--font-space-mono), ui-monospace, Menlo, Consolas, monospace;
+  --font-brush: var(--font-water-brush), 'Brush Script MT', cursive;
+  --shadow-soft: 0 18px 40px var(--shadow-color);
 }
 
 @theme {
+  --animate-rise: rise 0.3s cubic-bezier(0.22, 0.9, 0.3, 1);
   --animate-sway: sway 4s ease-in-out infinite;
-  --animate-flip: flip 0.6s cubic-bezier(0.5, 0, 0.3, 1);
-  --animate-enter: enter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-rise: rise 0.35s ease;
+  --animate-flip: flip 0.6s cubic-bezier(0.45, 0.05, 0.35, 1);
   --animate-fade-out: fade-out 0.8s ease forwards;
   --animate-fade-in: fade-in 0.25s ease;
-  --animate-sheet-up: sheet-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-drop: drop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-up: sheet-up 0.45s cubic-bezier(0.22, 0.9, 0.3, 1);
+  --animate-drop: drop 0.25s cubic-bezier(0.22, 0.9, 0.3, 1);
 
   @keyframes sway {
     0%, 100% { transform: rotate(-3deg); }
     50% { transform: rotate(3deg); }
   }
+  /* the notebook page flipping over its rings */
   @keyframes flip {
     0% { transform: rotateX(0); }
     45%, 55% { transform: rotateX(-88deg); }
     100% { transform: rotateX(0); }
-  }
-  @keyframes enter {
-    from { opacity: 0; transform: scale(0.82); filter: blur(6px); }
   }
   @keyframes rise {
     from { opacity: 0; transform: translateY(8px); }
@@ -116,87 +132,110 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { transition: background-color 0.6s ease, color 0.6s ease; }
-  :focus-visible { outline: 2px solid var(--aura-violet); outline-offset: 3px; }
-  /* Every headline uses the display face, slightly condensed; classes like font-serif still override it */
-  h1, h2, h3 { font-family: var(--font-display); font-stretch: 88%; font-optical-sizing: auto; }
+  body { transition: background-color 0.6s cubic-bezier(0.22, 0.9, 0.3, 1), color 0.6s cubic-bezier(0.22, 0.9, 0.3, 1); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  /* Headlines: Bodoni Moda, regular weight, sentence case */
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 400; }
 }
 
-/* Textures that are clearer as plain CSS than as utility classes */
+
+/* ---------- The desert scene (hero): same dunes, the sun by day, the crescent by night ----------
+   Drawn live (components/DesertScene.tsx) so the dunes drift and the sun and moon move. */
+:root, [data-theme='light'] { --dune-1: #e0cdaf; --dune-2: #c6a684; --dune-3: #9c7a58; --dune-4: #6b4c36; --dune-5: #33231a; }
+[data-theme='dark'] { --dune-1: #3a2826; --dune-2: #2c1e1d; --dune-3: #211616; --dune-4: #170f0f; --dune-5: #0e0909; }
+
+.desert .dune { animation: dune-drift linear infinite; transition: fill 0.6s cubic-bezier(0.22, 0.9, 0.3, 1); will-change: transform; }
+@keyframes dune-drift { to { transform: translateX(-1920px); } }
+
+/* A scene follows the site's mode, unless it is fixed to one (data-scene, for the loader and the switch) */
+.desert .scene-night { opacity: 0; transition: opacity 1.2s ease; }
+[data-theme='dark'] .desert:not([data-scene]) .scene-night,
+.desert[data-scene='dark'] .scene-night { opacity: 1; }
+
+/* By day the sun is up and the moon is down behind the dunes; at night they swap, slowly. */
+.desert .scene-sun,
+.desert .scene-moon { transition: transform 2s cubic-bezier(0.45, 0.05, 0.35, 1), opacity 1.6s ease; }
+.desert .scene-moon { transform: translateY(420px); opacity: 0; }
+[data-theme='dark'] .desert:not([data-scene]) .scene-sun,
+.desert[data-scene='dark'] .scene-sun { transform: translateY(420px); opacity: 0; }
+[data-theme='dark'] .desert:not([data-scene]) .scene-moon,
+.desert[data-scene='dark'] .scene-moon { transform: none; opacity: 1; }
+/* In the mode switch the swap is a little quicker, so the page isn't covered for long */
+.mode-transition .desert .scene-sun,
+.mode-transition .desert .scene-moon { transition-duration: 1.45s, 1.1s; }
+.mode-transition .desert .scene-night { transition-duration: 1.1s; }
+/* halfway through, the sky glows red at the horizon, then gives way to the new sky */
+.desert .scene-dusk { opacity: 0; animation: dusk-glow 1.45s ease-in-out forwards; }
+@keyframes dusk-glow { 0% { opacity: 0; } 45% { opacity: 0.85; } 100% { opacity: 0; } }
+
+.desert .float { animation: sun-float 9s ease-in-out infinite alternate; }
+@keyframes sun-float { from { transform: translateY(-8px); } to { transform: translateY(8px); } }
+.desert .glow-pulse { animation: glow-pulse 5s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes glow-pulse { from { opacity: 0.7; transform: scale(0.96); } to { opacity: 1; transform: scale(1.04); } }
+.desert .star { animation: twinkle 4s ease-in-out infinite alternate; }
+@keyframes twinkle { from { opacity: 0.15; } to { opacity: 0.85; } }
+
+.desert.scene-paused * { animation-play-state: paused; }
+/* A soft fade of the page colour from the left, over the top of the scene, so words sit on calm sky */
+.desert-fade {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--bg) 94%, transparent) 0%, color-mix(in srgb, var(--bg) 86%, transparent) 42%, transparent 64%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 86%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 86%);
+}
+@media (max-width: 767px) {
+  .desert-scene { background-position: 78% 100%; }
+  .desert-fade { background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, transparent) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 55%, transparent 80%); -webkit-mask-image: none; mask-image: none; }
+}
+
+/* Doors room on phones: flat doors in the same pointed arch as the 3D ones */
 @layer components {
-  .notebook-rings {
-    background: radial-gradient(ellipse 4px 10px at 50% 50%, transparent 0 2px, var(--soft) 2.5px 3.5px, transparent 4px) 0 0 / 26px 26px repeat-x;
-  }
-  .cord-bulb {
-    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-    background: radial-gradient(circle at 35% 30%, #fbe7a6, var(--gold) 45%, #9a7020 100%);
-  }
-  /* Door scene: a wall with arched doorways, a baseboard and a floor */
-  .scene-wall { background: radial-gradient(ellipse 70% 60% at 50% 35%, color-mix(in srgb, var(--scene-wall) 88%, #fff), var(--scene-wall) 70%); }
-  .scene-floor {
-    background:
-      linear-gradient(var(--scene-baseboard) 0 16px, rgba(0, 0, 0, 0.35) 16px 18px, transparent 18px),
-      linear-gradient(var(--scene-floor), color-mix(in srgb, var(--scene-floor) 70%, #000));
-  }
-  .door-recess {
-    background: #050608;
-    box-shadow:
-      0 0 0 12px var(--scene-casing),
-      0 0 0 13px rgba(0, 0, 0, 0.3),
-      -6px 10px 30px 10px rgba(0, 0, 0, 0.25),
-      inset 0 12px 30px rgba(0, 0, 0, 0.8);
-  }
+  /* The one italic phrase in a headline, in the red for words */
+  .serif-accent { font-family: var(--font-display); font-style: italic; font-weight: 400; color: var(--link); }
+
+  /* Small labels: Space Mono capitals, letter-spaced */
+  .label-caps { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+  .micro-caps { font-family: var(--font-mono); font-size: 11px; line-height: 14px; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  /* The REC dot: an 8px red circle with a soft glow, blinking once every 1.4s */
+  .rec-dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: var(--rec); box-shadow: 0 0 8px color-mix(in srgb, var(--rec) 60%, transparent); }
+
+  /* The pull cord's bulb: brass in the sand tones of the dunes */
+  .cord-bulb { border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%; background: radial-gradient(circle at 35% 30%, #f3ebe0, #e3cfae 35%, #9c7a58 75%, #6b4c36 100%); }
+
+  /* Spiral rings along the top of the notebook card */
+  .notebook-rings { background: radial-gradient(ellipse 4px 10px at 50% 50%, transparent 0 2px, var(--line-strong) 2.5px 3.5px, transparent 4px) 0 0 / 26px 26px repeat-x; }
+
+  /* Doors room on phones */
+  .scene-wall { background: radial-gradient(ellipse 70% 60% at 50% 35%, color-mix(in srgb, var(--scene-wall) 85%, #e3cfae), var(--scene-wall) 70%); }
+  .door-recess { background: #0e0909; box-shadow: 0 0 0 10px var(--scene-casing), inset 0 12px 30px rgba(0, 0, 0, 0.8); }
   .door-leaf {
     background:
-      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 2px, rgba(255, 255, 255, 0.05) 2px 3px, transparent 3px 11px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent 35%, rgba(0, 0, 0, 0.22)),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, rgba(255, 255, 255, 0.05) 2px 3px, transparent 3px 11px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 35%, rgba(0, 0, 0, 0.25)),
       var(--door);
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), inset -6px 0 12px rgba(0, 0, 0, 0.2);
     backface-visibility: hidden;
   }
-  .door-plate {
-    background: linear-gradient(135deg, #f8dd85, #c99a2e 55%, #f3d27a);
-    color: #3b2a07;
-    text-shadow: 0 1px 0 rgba(255, 240, 190, 0.6);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(120, 85, 10, 0.5);
-  }
-  .door-gold { background: linear-gradient(180deg, #fff1bd, #e2b445 45%, #9c6f17); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.45); }
+  .door-plate { background: linear-gradient(135deg, #e3cfae, #9c7a58 55%, #e0cdaf); color: #33231a; }
+  .door-gold { background: linear-gradient(180deg, #f3ebe0, #c6a684 45%, #6b4c36); }
   .door-keyhole {
     background:
-      radial-gradient(circle at 50% 30%, #111 0 22%, transparent 24%),
-      linear-gradient(#111, #111) 50% 72% / 22% 40% no-repeat,
-      linear-gradient(180deg, #fff1bd, #e2b445 45%, #9c6f17);
+      radial-gradient(circle at 50% 30%, #0e0909 0 22%, transparent 24%),
+      linear-gradient(#0e0909, #0e0909) 50% 72% / 22% 40% no-repeat,
+      linear-gradient(180deg, #f3ebe0, #c6a684 45%, #6b4c36);
   }
-  /* Darkened edges around the doors room, like a film frame */
-  .scene-vignette {
-    background: radial-gradient(ellipse 75% 70% at 50% 48%, transparent 55%, color-mix(in srgb, #000 var(--vignette), transparent) 100%);
-  }
-  .scene-title { text-shadow: 0 0 28px color-mix(in srgb, var(--fg) 30%, transparent); }
-  /* The brand's aura: violet into pink into orange, as on the logo kit's hero image */
-  .story-glow {
-    background:
-      radial-gradient(ellipse 34% 30% at 22% 34%, color-mix(in srgb, var(--aura-violet) 22%, transparent), transparent 70%),
-      radial-gradient(ellipse 30% 28% at 34% 55%, color-mix(in srgb, var(--aura-pink) 14%, transparent), transparent 70%),
-      radial-gradient(ellipse 28% 24% at 26% 74%, color-mix(in srgb, var(--aura-orange) 12%, transparent), transparent 70%),
-      var(--bg);
-  }
+  .scene-vignette { background: radial-gradient(ellipse 75% 70% at 50% 48%, transparent 55%, color-mix(in srgb, #000 var(--vignette), transparent) 100%); }
 }
-
-/* The intro has already played this visit: never show it, not even for a frame. */
-[data-intro='seen'] .brand-intro { display: none; }
-
-/* Pointed gothic arch for the flat doors (phones, menus), matching the 3D doors */
 .gothic-arch { clip-path: polygon(0 100%, 0 46%, 2% 37%, 6% 28%, 12% 19%, 20% 11%, 29% 5%, 39% 1.5%, 50% 0, 61% 1.5%, 71% 5%, 80% 11%, 88% 19%, 94% 28%, 98% 37%, 100% 46%, 100% 100%); }
 
-/* ---------- Retro / cinematic layer ---------- */
+/* The intro has already played: never show it, not even for a frame. */
+[data-intro='seen'] .brand-intro { display: none; }
 
 /* Smooth scrolling is handled by Lenis; the browser's own smoothing would fight it. */
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-/* Film grain: one small noise tile on an oversized layer that jumps around a few times a second.
-   Moving it is done by the graphics card, so it costs almost nothing. */
+/* Film grain: at night only (on day pages it would sit on paper, which the brand keeps clean). */
 .film-grain {
   position: fixed;
   inset: -50%;
@@ -216,43 +255,65 @@ html.lenis, html.lenis body { height: auto; }
   100% { transform: translate(-4%, -5%); }
 }
 
+/* The cursor ring (components/CursorTrail.tsx): a thin circle easing after the pointer */
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 68;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--fg) 45%, transparent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  will-change: transform;
+}
+.cursor-ring[data-hover='true'] {
+  border-color: color-mix(in srgb, var(--link) 70%, transparent);
+  background: color-mix(in srgb, var(--link) 8%, transparent);
+}
+
 /* Endless ticker */
-.marquee-track { animation: marquee 38s linear infinite; will-change: transform; }
+.marquee-track { animation: marquee 44s linear infinite; will-change: transform; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
-/* Spinning badge and blinking REC dot */
-.spin-slow { animation: spin 18s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.rec-blink { animation: rec-blink 1.4s steps(1) infinite; }
-@keyframes rec-blink { 50% { opacity: 0; } }
+.rec-blink { animation: rec-blink 1.4s ease-in-out infinite; }
+@keyframes rec-blink { 50% { opacity: 0.25; } }
 
-/* Sections fade and rise gently as they come into view */
-.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+/* Brush wipe for the changing word in the hero */
+.brush-wipe { animation: brush-wipe 0.95s cubic-bezier(0.45, 0.05, 0.35, 1); }
+@keyframes brush-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Sections fade in and rise 16px, once */
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.6s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .reveal.is-in { opacity: 1; transform: none; }
 
-/* Italic serif accent inside headlines */
-.serif-accent { font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; }
-
-/* ---------- Brand intro: the Adyssey logo draws itself ----------
+/* ---------- Brand intro: the Adyssey logo draws itself (night, cream, REC red) ----------
    0–2s   a pen line traces each stroke, left to right
    1.65s  the cream fill comes in and the pen lines fade
    2.05s  the red lens dot and playhead pop in
-   1.7s+  the aura and the glow rise behind the logo */
+   0.2s+  the red crescent rises behind it, over the night desert
+   1.7s+  the night glow rises behind the logo */
 .intro-aura {
-  background:
-    radial-gradient(ellipse 30% 28% at 46% 42%, rgba(139, 107, 255, 0.55), transparent 70%),
-    radial-gradient(ellipse 26% 24% at 57% 56%, rgba(255, 79, 216, 0.32), transparent 70%),
-    radial-gradient(ellipse 24% 20% at 49% 70%, rgba(255, 138, 61, 0.26), transparent 70%);
-  filter: blur(30px);
+  background: radial-gradient(ellipse 30% 28% at 50% 42%, rgba(122, 42, 44, 0.55), transparent 72%);
+  filter: blur(24px);
   opacity: 0;
   animation: intro-show 1.4s ease 1.7s forwards;
 }
+.intro-moon { opacity: 0; transform: translateY(70px); animation: intro-moon-rise 2.2s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s forwards; }
+@keyframes intro-moon-rise { to { opacity: 1; transform: none; } }
+.intro-moon-glow { transform-box: fill-box; transform-origin: center; animation: glow-pulse 5s ease-in-out 2.4s infinite alternate; }
 .intro-stroke {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation-name: intro-draw;
-  animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.35, 1);
   animation-fill-mode: forwards;
 }
 .intro-strokes { animation: intro-hide 0.6s ease 2.1s forwards; }
@@ -261,12 +322,11 @@ html.lenis, html.lenis body { height: auto; }
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
-  animation: intro-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 2.05s forwards;
+  animation: intro-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 2.05s forwards;
 }
 .intro-logo { animation: intro-glow 1.2s ease 2.1s forwards; }
 .intro-tagline { opacity: 0; transform: translateY(8px); animation: intro-rise 0.8s ease 2.25s forwards; }
 @keyframes intro-rise { to { opacity: 1; transform: none; } }
-
 @keyframes intro-draw { to { stroke-dashoffset: 0; } }
 @keyframes intro-show { to { opacity: 1; } }
 @keyframes intro-hide { to { opacity: 0; } }
@@ -274,16 +334,16 @@ html.lenis, html.lenis body { height: auto; }
   from { opacity: 0; transform: scale(0.3); }
   to { opacity: 1; transform: scale(1); }
 }
-@keyframes intro-glow {
-  to { filter: drop-shadow(0 0 18px rgba(139, 107, 255, 0.55)) drop-shadow(0 0 4px rgba(244, 240, 232, 0.45)); }
-}
+@keyframes intro-glow { to { filter: drop-shadow(0 0 22px rgba(216, 71, 58, 0.4)); } }
 
-/* Reduced motion: no drawing, just the finished logo. */
 .intro-reduced .intro-strokes { display: none; }
 .intro-reduced .intro-fill,
 .intro-reduced .intro-rec,
 .intro-reduced .intro-aura,
+.intro-reduced .intro-moon,
 .intro-reduced .intro-tagline { opacity: 1; transform: none; }
+.intro-reduced .intro-moon-glow,
+.intro-reduced .desert * { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

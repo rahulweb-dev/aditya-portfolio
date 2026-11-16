@@ -45,14 +45,14 @@ export default function Story() {
   }, [active]);
 
   return (
-    <section id="story" className="story-glow relative grid grid-cols-1 gap-12 px-[clamp(16px,4vw,64px)] py-[120px] md:grid-cols-2">
+    <section id="story" className="relative grid grid-cols-1 gap-12 px-[clamp(24px,4vw,48px)] py-[clamp(64px,8vw,96px)] md:grid-cols-2">
       <div>
         <div className="flex flex-col gap-[18px] md:sticky md:top-[120px]">
-          <Eyebrow>My story</Eyebrow>
-          <h2 className="text-[clamp(32px,4vw,54px)] font-semibold tracking-[-0.012em]">Let&apos;s go back <span className="serif-accent">in time.</span></h2>
-          <div className="text-[clamp(90px,13vw,190px)] leading-[0.9] font-bold tracking-[-0.05em] tabular-nums">{year}</div>
-          <p className="m-0 font-mono text-[13px] font-medium tracking-[0.08em] text-soft uppercase">{STORY[active].range}</p>
-          <div className="flex items-center gap-3.5 font-mono text-xs text-soft">
+          <Eyebrow>03 — My story</Eyebrow>
+          <h2 className="m-0 text-[clamp(40px,5vw,72px)] leading-[1.03] tracking-[-0.015em]">Let&apos;s go back <span className="serif-accent">in time.</span></h2>
+          <div className="font-display text-[clamp(96px,13vw,184px)] leading-[0.9] tracking-[-0.03em] tabular-nums">{year}</div>
+          <p className="label-caps m-0 flex items-center gap-2 text-soft"><span className="rec-dot rec-blink" />{STORY[active].range}</p>
+          <div className="micro-caps flex items-center gap-3.5 text-soft">
             <span><b className="font-medium text-fg">{pad(active + 1)}</b> / {pad(STORY.length)}</span>
             <span className="relative h-0.5 w-[140px] bg-line">
               <i className="absolute inset-y-0 left-0 bg-fg transition-[width] duration-500" style={{ width: `${((active + 1) / STORY.length) * 100}%` }} />
@@ -66,8 +66,8 @@ export default function Story() {
           <Fragment key={entry.year + entry.title}>
             {entry.section && (
               // A heading on the line, sitting just above the first entry of its group
-              <li className="relative mb-[-32px] before:absolute before:top-1/2 before:-left-[37px] before:size-[9px] before:-translate-y-1/2 before:rotate-45 before:bg-fg before:content-[''] md:mb-[calc(28px-14vh)]">
-                <h3 className="flex items-center gap-3 font-mono text-xs font-medium tracking-[0.16em] text-fg uppercase">
+              <li className="relative mb-[-32px] before:absolute before:top-1/2 before:-left-[37px] before:size-[9px] before:-translate-y-1/2 before:rotate-45 before:bg-rec before:content-[''] md:mb-[calc(28px-14vh)]">
+                <h3 className="label-caps flex items-center gap-3 text-fg">
                   {entry.section}
                   <span aria-hidden="true" className="h-px w-16 bg-line" />
                 </h3>
@@ -77,18 +77,20 @@ export default function Story() {
               ref={el => { items.current[i] = el; }}
               data-index={i}
               className={`relative transition-opacity duration-500 before:absolute before:top-1 before:-left-[38px] before:size-[11px] before:rounded-full before:border-2 before:transition-colors before:content-[''] ${
-                i === active ? 'opacity-100 before:border-live before:bg-live' : 'opacity-35 before:border-muted before:bg-bg'
+                i === active ? 'opacity-100 before:border-rec before:bg-rec before:shadow-[0_0_8px_var(--rec)]' : 'opacity-40 before:border-line-strong before:bg-bg'
               }`}
             >
-              <p className="mb-2 font-mono text-[11px] font-medium tracking-[0.08em] text-soft uppercase">{entry.date}</p>
-              <h3 className="text-[clamp(24px,2.6vw,34px)] font-semibold tracking-[-0.02em]">{entry.title}</h3>
-              <p className="mt-1.5 mb-3 text-sm text-soft">{entry.org}</p>
-              <ul className="m-0 grid max-w-[52ch] list-disc gap-1.5 pl-[18px] text-sm leading-relaxed text-soft">
+              <p className="micro-caps mb-2 text-soft">{entry.date}</p>
+              <h3 className="m-0 text-[clamp(24px,2.4vw,30px)] leading-[1.2] font-medium">{entry.title}</h3>
+              <p className="mt-1.5 mb-3 text-[13px] text-soft">{entry.org}</p>
+              <ul className="m-0 grid max-w-[56ch] list-disc gap-1.5 pl-[18px] text-[15px] leading-[26px] text-soft">
                 {entry.points.map(p => <li key={p}>{p}</li>)}
               </ul>
             </li>
           </Fragment>
         ))}
+        {/* signed off by hand: the one Water Brush accent on the page */}
+        <li aria-label="Aditya" className="font-brush text-[56px] leading-[60px] text-fg">Aditya</li>
       </ol>
     </section>
   );

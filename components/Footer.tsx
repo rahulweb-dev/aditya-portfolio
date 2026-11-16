@@ -1,23 +1,21 @@
 import { TimeText } from './Clock';
 import Logo from './Logo';
-import { BRAND, ROOMS, SITE } from '@/lib/content';
+import { ROOMS, SITE } from '@/lib/content';
 
-const link = 'text-soft no-underline transition-colors hover:text-fg';
-const head = 'mb-1 font-mono text-[11px] font-medium tracking-[0.1em] text-fg uppercase';
+const link = 'text-muted-on-dark no-underline transition-colors hover:text-on-dark';
+const head = 'label-caps mb-1 text-icon-on-dark';
 
+/** The footer is a dark section in both modes: the stacked cream logo, the links, contact and "Back to top ↑". */
 export default function Footer() {
   return (
-    <footer className="border-t border-line px-[clamp(16px,4vw,64px)] pt-12 pb-32 text-sm md:pb-8">
-      <div className="flex flex-col gap-12 lg:flex-row lg:gap-20">
+    <footer className="bg-dark px-[clamp(24px,4vw,48px)] pt-16 pb-32 text-[13px] leading-[22px] text-on-dark md:pb-10">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-12 lg:flex-row lg:gap-20">
         <div className="flex flex-col gap-4">
-          <Logo variant="stacked" width={132} />
-          <p className="max-w-[26ch] text-soft">
+          <Logo variant="stacked" width={132} tone="night" />
+          <p className="m-0 max-w-[30ch] text-muted-on-dark">
             {SITE.fullName}
             <br />
             {SITE.title}
-          </p>
-          <p className="max-w-[26ch] font-serif text-[17px] leading-snug text-fg italic">
-            {BRAND.name}: {BRAND.tagline.charAt(0).toLowerCase() + BRAND.tagline.slice(1)}.
           </p>
         </div>
 
@@ -28,9 +26,9 @@ export default function Footer() {
           </div>
           <div className="flex flex-col gap-2">
             <p className={head}>Navigate</p>
-            <a href="#home" className={link}>Home</a>
-            <a href="#story" className={link}>My story</a>
-            <a href="#contact" className={link}>Contact</a>
+            <a href="/#home" className={link}>Home</a>
+            <a href="/#story" className={link}>My story</a>
+            <a href="/#contact" className={link}>Contact</a>
           </div>
           <div className="flex flex-col gap-2">
             <p className={head}>Elsewhere</p>
@@ -40,16 +38,16 @@ export default function Footer() {
               </a>
             ))}
           </div>
-          <div className="flex flex-col gap-2 text-soft">
+          <div className="flex flex-col gap-2 text-muted-on-dark">
             <p className={head}>Contact</p>
             <a href={`mailto:${SITE.email}`} className={`${link} break-all`}>{SITE.email}</a>
             <a href={SITE.phoneHref} className={link}>{SITE.phone}</a>
-            <p>{SITE.location} · <TimeText /></p>
+            <p className="m-0">{SITE.location} · <TimeText /></p>
           </div>
         </div>
       </div>
-      <div className="mt-12 flex flex-wrap justify-between gap-3 text-[13px] text-muted">
-        <p>© {new Date().getFullYear()} {SITE.fullName} · Adyssey</p>
+      <div className="micro-caps mx-auto mt-14 flex max-w-[1200px] flex-wrap justify-between gap-3 border-t border-line-on-dark pt-6 text-muted-on-dark">
+        <p className="m-0">© {new Date().getFullYear()} {SITE.fullName} · Hyderabad, India</p>
         <a href="#home" className={link}>Back to top ↑</a>
       </div>
     </footer>

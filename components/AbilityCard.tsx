@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { ABILITIES, CERTIFICATIONS, LANGUAGES, TOOLS } from '@/lib/content';
+import RoleIcon from './RoleIcon';
+import { ABILITIES, CERTIFICATIONS, LANGUAGES, ROOMS, TOOLS } from '@/lib/content';
 
+/** "My ability card": a dark card (night colours in both modes) with the four craft symbols. */
 export default function AbilityCard() {
   const [open, setOpen] = useState(false);
 
@@ -13,34 +15,39 @@ export default function AbilityCard() {
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-controls="ability"
-        className="absolute right-[18px] bottom-[18px] cursor-pointer rounded-full border border-white/50 bg-[rgba(16,17,20,0.8)] px-3.5 py-2 text-xs font-medium text-[#f3f3f1]"
+        className="label-caps absolute right-4 bottom-4 min-h-9 cursor-pointer rounded-full border border-line-on-dark bg-dark/90 px-3.5 text-on-dark"
       >
         My ability card
       </button>
       {open && (
         <div
           id="ability"
-          className="absolute right-[18px] bottom-[66px] max-h-[calc(100%-84px)] w-[min(320px,calc(100%-36px))] animate-rise overflow-y-auto rounded-2xl bg-card p-[18px] shadow-soft"
+          className="absolute right-4 bottom-[60px] max-h-[calc(100%-76px)] w-[min(320px,calc(100%-32px))] animate-rise overflow-y-auto rounded-[20px] border border-line-on-dark bg-dark p-5 text-on-dark"
         >
-          <p className="mb-2.5 font-mono text-xs font-medium text-soft">What I do</p>
-          <ul className="m-0 grid list-none gap-2.5 p-0">
+          <div className="mb-4 flex gap-3">
+            {ROOMS.map(r => (
+              <RoleIcon key={r.key} craft={r.key} tone="night" size={28} />
+            ))}
+          </div>
+          <p className="label-caps mb-3 text-muted-on-dark">What I do</p>
+          <ul className="m-0 grid list-none gap-3 p-0">
             {ABILITIES.map(a => (
-              <li key={a.skill} className="grid gap-0.5 text-sm">
-                <b className="font-semibold">{a.skill}</b>
-                <span className="text-[13px] text-soft">{a.detail}</span>
+              <li key={a.skill} className="grid gap-0.5">
+                <b className="font-display text-[18px] leading-6 font-medium">{a.skill}</b>
+                <span className="text-[13px] leading-[22px] text-muted-on-dark">{a.detail}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 mb-2 font-mono text-xs font-medium text-soft">Tools</p>
+          <p className="label-caps mt-5 mb-2 text-muted-on-dark">Tools</p>
           <div className="flex flex-wrap gap-1.5">
             {TOOLS.map(t => (
-              <span key={t} className="rounded-full border border-line px-2.5 py-1 text-[11px] text-soft">{t}</span>
+              <span key={t} className="micro-caps rounded-full border border-line-on-dark px-2.5 py-1 text-muted-on-dark">{t}</span>
             ))}
           </div>
-          <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-            <dt className="font-mono text-soft">Certified</dt>
+          <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[13px]">
+            <dt className="text-muted-on-dark">Certified</dt>
             <dd className="m-0">{CERTIFICATIONS.join(', ')}</dd>
-            <dt className="font-mono text-soft">Languages</dt>
+            <dt className="text-muted-on-dark">Languages</dt>
             <dd className="m-0">{LANGUAGES.join(', ')}</dd>
           </dl>
         </div>
