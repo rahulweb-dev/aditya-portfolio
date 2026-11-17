@@ -11,7 +11,12 @@ export default function SmoothScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const lenis = new Lenis({ autoRaf: true, lerp: 0.11, wheelMultiplier: 0.95 });
-    return () => lenis.destroy();
+    // so a full-screen viewer can pause the page's scrolling while it is open
+    (window as Window & { __lenis?: Lenis }).__lenis = lenis;
+    return () => {
+      lenis.destroy();
+      delete (window as Window & { __lenis?: Lenis }).__lenis;
+    };
   }, []);
   return null;
 }

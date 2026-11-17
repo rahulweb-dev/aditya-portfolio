@@ -1,27 +1,34 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ROOMS, isSkill, type SkillKey } from '@/lib/content';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { isSkill, type Room, type SkillKey } from '@/lib/content';
+import { useContent } from './ContentProvider';
 import DoorDetails from './DoorDetails';
 import GlowDoors, { DOOR_GLOW, type DoorSpot } from './GlowDoors';
 import { Eyebrow } from './ui';
+import Wormhole from './Wormhole';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
-const room = (key: SkillKey) => ROOMS.find(r => r.key === key)!;
 
 // In order, left to right; each on its own dune: mid, far, near, mid
-const DESKTOP_SPOTS: DoorSpot[] = [
-  { room: room('design'), frac: 0.17, layer: 1 },
-  { room: room('photo'), frac: 0.39, layer: 0 },
-  { room: room('video'), frac: 0.61, layer: 2 },
-  { room: room('ai'), frac: 0.83, layer: 1 },
+const PLACES: { key: SkillKey; frac: number; layer: number }[] = [
+  { key: 'design', frac: 0.17, layer: 1 },
+  { key: 'photo', frac: 0.39, layer: 0 },
+  { key: 'video', frac: 0.61, layer: 2 },
+  { key: 'ai', frac: 0.83, layer: 1 },
 ];
-// Phones: one door per small scene
-const PHONE_SPOTS: Record<SkillKey, DoorSpot[]> = Object.fromEntries(
-  ROOMS.map(r => [r.key, [{ room: r, frac: 0.5, layer: 1 }]]),
-) as Record<SkillKey, DoorSpot[]>;
+
+/** Where each door stands (desktop), and one door per small scene (phones). Built once per set of words. */
+function useSpots(rooms: Room[]) {
+  return useMemo(() => {
+    const room = (key: SkillKey) => rooms.find(r => r.key === key)!;
+    const desktop: DoorSpot[] = PLACES.map(p => ({ room: room(p.key), frac: p.frac, layer: p.layer }));
+    const phone = Object.fromEntries(rooms.map(r => [r.key, [{ room: r, frac: 0.5, layer: 1 }]])) as Record<SkillKey, DoorSpot[]>;
+    return { desktop, phone };
+  }, [rooms]);
+}
 
 const ZOOM = 9;
 
@@ -49,6 +56,8 @@ function fadeBlack(el: HTMLElement | null, on: boolean, duration = '0.6s', delay
 }
 
 export default function Doors() {
+  const ROOMS = useContent().rooms;
+  const { desktop: DESKTOP_SPOTS, phone: PHONE_SPOTS } = useSpots(ROOMS);
   const router = useRouter();
   const sectionRef = useRef<HTMLElement>(null);
   const deskRef = useRef<HTMLDivElement>(null);
@@ -57,6 +66,7 @@ export default function Doors() {
   const busy = useRef(false);
   const [hovered, setHovered] = useState<SkillKey | null>(null);
   const [openKey, setOpenKey] = useState<SkillKey | null>(null);
+  const [tunnel, setTunnel] = useState<SkillKey | null>(null);
 
   useEffect(() => {
     ROOMS.forEach(r => router.prefetch(`/work/${r.key}`));
@@ -109,16 +119,16 @@ export default function Doors() {
       busy.current = true;
       setOpenKey(key);
       if (reducedMotion() || !scene || !door) return router.push(`/work/${key}`);
-      // the doorway brightens, then we step into its light
-      setTimeout(() => zoomInto(scene, door, true, 1.15), 220);
-      fadeBlack(blackRef.current, true, '0.45s', '1.05s');
-      setTimeout(() => router.push(`/work/${key}`), 1550);
+      // the doorway lifts and whites out, we rush into its light, and fall through the wormhole
+      setTimeout(() => zoomInto(scene, door, true, 0.9), 150);
+      setTimeout(() => setTunnel(key), 420);
+      fadeBlack(blackRef.current, true, '0.4s', '1.75s');
+      setTimeout(() => router.push(`/work/${key}`), 2200);
     },
     [router],
   );
 
   const enterDesktop = (key: SkillKey) => enter(key, deskRef.current, deskRef.current?.querySelector(`[data-door="${key}"] [data-core]`));
-  const shown = hovered ? room(hovered) : null;
 
   return (
     <section id="work" ref={sectionRef} className="relative overflow-hidden bg-[#140D0E]">
@@ -140,27 +150,9 @@ export default function Doors() {
             </h2>
           </div>
 
-          {/* what's behind the door you're looking at */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] flex justify-center px-6">
-            <div className="relative h-[92px] w-full max-w-[760px] text-center">
-              <p className={`micro-caps absolute inset-x-0 top-1/2 m-0 -translate-y-1/2 text-muted-on-dark transition-opacity duration-500 ${shown ? 'opacity-0' : 'opacity-100'}`}>
-                Hover a door to look inside · click to step through
-              </p>
-              {ROOMS.map(r => (
-                <div
-                  key={r.key}
-                  aria-hidden={hovered !== r.key}
-                  className={`absolute inset-0 flex flex-col items-center justify-center gap-2 transition-[opacity,translate] duration-600 ease-[cubic-bezier(0.22,0.9,0.3,1)] ${hovered === r.key ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
-                >
-                  <h3 className="m-0 text-[clamp(26px,2.4vw,34px)] leading-none font-normal text-on-dark">{r.title}</h3>
-                  <p className="micro-caps m-0" style={{ color: DOOR_GLOW[r.key] }}>
-                    {r.motto}
-                  </p>
-                  <p className="label-caps m-0 text-icon-on-dark">Enter →</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <p className="micro-caps pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] m-0 text-center text-muted-on-dark">
+            Hover a door to see what's behind it · click to step through
+          </p>
         </div>
       </div>
 
@@ -189,6 +181,7 @@ export default function Doors() {
         </div>
       </div>
 
+      {tunnel && <Wormhole color={DOOR_GLOW[tunnel]} />}
       <div ref={blackRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-60 bg-black opacity-0" />
     </section>
   );

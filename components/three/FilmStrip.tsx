@@ -5,15 +5,21 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnScreen } from './useThemeColors';
 
-// Frames on the strip. Swap these for your own work in /public/assets.
-const FRAMES = ['/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg', '/assets/portrait.jpg'];
+// Frames on the strip: the hero passes in photographs from the Photography gallery (ImageKit).
+// These stock frames are only a fallback if none come through.
+const FALLBACK = ['/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg', '/assets/portrait.jpg'];
 
 const TEX_W = 4096;
 const TEX_H = 512;
-const PITCH = TEX_W / FRAMES.length; // one frame per 512px
+const FRAME_COUNT = 8;
+const PITCH = TEX_W / FRAME_COUNT; // one frame per 512px
 const HOLES_PER_FRAME = 12; // sprocket holes divide each frame exactly, so the loop has no seam
 const STRIP_W = 18; // world units; the texture repeats once across this width
 const STRIP_H = STRIP_W * (TEX_H / TEX_W);
+// The ribbon itself is much longer than the film pattern (which repeats along it), so neither end
+// ever comes into view, however the strip leans towards the mouse.
+const REPEATS = 3;
+const RIBBON_W = STRIP_W * REPEATS;
 
 // One speed for everything: the film rolls left and its waves travel left at the same pace,
 // so the strip moves as one ribbon instead of sliding over its own ripples.
@@ -23,13 +29,14 @@ const SPEED = ROLL * STRIP_W; // world units per second
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>(resolve => {
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // ImageKit allows it; without it the canvas couldn't become a texture
     img.onload = () => resolve(img);
     img.onerror = () => resolve(img);
     img.src = src;
   });
 
 /** Draws the whole strip once every photo has loaded, so nothing pops in. */
-function useFilmTexture(onReady: () => void) {
+function useFilmTexture(frames: string[], onReady: () => void) {
   const { canvas, texture } = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = TEX_W;
@@ -37,13 +44,16 @@ function useFilmTexture(onReady: () => void) {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
+    texture.repeat.x = REPEATS;
     texture.anisotropy = 8;
     return { canvas, texture };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(FRAMES.map(loadImage)).then(images => {
+    // always eight frames: repeat the photos if there are fewer
+    const list = frames.length ? Array.from({ length: FRAME_COUNT }, (_, i) => frames[i % frames.length]) : FALLBACK;
+    Promise.all(list.map(loadImage)).then(images => {
       if (cancelled) return;
       const g = canvas.getContext('2d')!;
       const band = 78;
@@ -52,7 +62,7 @@ function useFilmTexture(onReady: () => void) {
       g.fillRect(0, 0, TEX_W, TEX_H);
       g.fillStyle = '#F3EBE0';
       const step = PITCH / HOLES_PER_FRAME;
-      for (let i = 0; i < FRAMES.length * HOLES_PER_FRAME; i++) {
+      for (let i = 0; i < FRAME_COUNT * HOLES_PER_FRAME; i++) {
         const x = i * step + (step - 24) / 2;
         for (const y of [24, TEX_H - 52]) {
           g.beginPath();
@@ -87,15 +97,15 @@ function useFilmTexture(onReady: () => void) {
     return () => {
       cancelled = true;
     };
-  }, [canvas, texture, onReady]);
+  }, [canvas, texture, onReady, frames]);
 
   return texture;
 }
 
-function Strip({ onReady, still }: { onReady: () => void; still: boolean }) {
+function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => void; still: boolean }) {
   const group = useRef<THREE.Group>(null);
-  const texture = useFilmTexture(onReady);
-  const geometry = useMemo(() => new THREE.PlaneGeometry(STRIP_W, STRIP_H, 120, 1), []);
+  const texture = useFilmTexture(frames, onReady);
+  const geometry = useMemo(() => new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 120 * REPEATS, 1), []);
   const base = useMemo(() => Float32Array.from(geometry.attributes.position.array), [geometry]);
   const time = useRef(0);
 
@@ -137,7 +147,7 @@ function Strip({ onReady, still }: { onReady: () => void; still: boolean }) {
 }
 
 /** 3D film strip that flows across the dunes behind the hero and leans towards the mouse. */
-export default function FilmStrip() {
+export default function FilmStrip({ frames = [] }: { frames?: string[] }) {
   const wrap = useRef<HTMLDivElement>(null);
   const onScreen = useOnScreen(wrap);
   const [ready, setReady] = useState(false);
@@ -160,7 +170,7 @@ export default function FilmStrip() {
         eventSource={typeof document !== 'undefined' ? document.body : undefined}
         eventPrefix="client"
       >
-        <Strip onReady={markReady} still={still} />
+        <Strip frames={frames} onReady={markReady} still={still} />
       </Canvas>
     </div>
   );

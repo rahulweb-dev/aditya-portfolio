@@ -1,12 +1,13 @@
 import { TimeText } from './Clock';
 import Logo from './Logo';
-import { ROOMS, SITE } from '@/lib/content';
+import { getContent } from '@/lib/cms/content';
 
 const link = 'text-muted-on-dark no-underline transition-colors hover:text-on-dark';
 const head = 'label-caps mb-1 text-icon-on-dark';
 
 /** The footer is a dark section in both modes: the stacked cream logo, the links, contact and "Back to top ↑". */
-export default function Footer() {
+export default async function Footer() {
+  const { rooms: ROOMS, site: SITE } = await getContent();
   return (
     <footer className="bg-dark px-[clamp(24px,5vw,80px)] pt-16 pb-32 text-[13px] leading-[22px] text-on-dark md:pb-24">
       {/* full width: the logo on the left edge, the columns spread out to the right edge */}

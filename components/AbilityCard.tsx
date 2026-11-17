@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import RoleIcon from './RoleIcon';
-import { ABILITIES, CERTIFICATIONS, LANGUAGES, ROOMS, TOOLS } from '@/lib/content';
+import { useContent } from './ContentProvider';
 
 /** "My ability card": a dark card (night colours in both modes) with the four craft symbols. */
 export default function AbilityCard() {
+  const { rooms: ROOMS, ability } = useContent();
+  const { abilities: ABILITIES, tools: TOOLS, certifications: CERTIFICATIONS, languages: LANGUAGES } = ability;
   const [open, setOpen] = useState(false);
 
   return (

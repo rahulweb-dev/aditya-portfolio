@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element -- the wordmark is an SVG logo file */
 import Reveal from './Reveal';
 import { Eyebrow } from './ui';
-import { BRAND } from '@/lib/content';
+import { getContent } from '@/lib/cms/content';
 
 /** "01 — What's in a name?" Explains Adyssey like a dictionary entry. The heading is the wordmark file, never typed. */
-export default function AdysseyMeaning() {
+export default async function AdysseyMeaning() {
+  const BRAND = (await getContent()).brand;
   return (
     <section id="adyssey" aria-labelledby="adyssey-title" className="px-[clamp(24px,4vw,48px)] py-[clamp(64px,8vw,96px)]">
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-12 md:grid-cols-2 md:gap-16">

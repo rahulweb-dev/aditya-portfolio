@@ -4,6 +4,8 @@ import Grain from '@/components/Grain';
 import CursorTrail from '@/components/CursorTrail';
 import ModeTransition from '@/components/ModeTransition';
 import SmoothScroll from '@/components/SmoothScroll';
+import ContentProvider from '@/components/ContentProvider';
+import { getContent } from '@/lib/cms/content';
 import './globals.css';
 
 // Red Sun type: Bodoni Moda for headlines, Space Mono for words and labels, Water Brush for one signature.
@@ -52,7 +54,9 @@ export const viewport: Viewport = {
 // when coming back through a door.
 const bootScript = `try{var d=document.documentElement,t=localStorage.getItem('theme');d.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(sessionStorage.getItem('returnDoor'))d.dataset.intro='seen'}catch(e){}`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // the site's text, from MongoDB (cached until the Content studio saves a change)
+  const content = await getContent();
   return (
     <html lang="en-GB" data-theme="light" suppressHydrationWarning className={`${bodoni.variable} ${spaceMono.variable} ${waterBrush.variable}`}>
       <head>
@@ -60,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-bg font-sans text-[15px] leading-[26px] text-fg antialiased">
         <SmoothScroll />
-        {children}
+        <ContentProvider value={content}>{children}</ContentProvider>
         <Grain />
         <ModeTransition />
         <CursorTrail />

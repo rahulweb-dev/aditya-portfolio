@@ -4,21 +4,35 @@ import AbilityCard from './AbilityCard';
 import DesertScene from './DesertScene';
 import HeroFilm from './HeroFilm';
 import { Eyebrow, GhostButton, SolidButton } from './ui';
-import { SITE } from '@/lib/content';
+import { getContent } from '@/lib/cms/content';
+import { listWorks } from '@/lib/cms/imagekit';
+
+/**
+ * Photographs for the film strip: the ones marked "Film strip" in the Content studio (in gallery order),
+ * or if none are marked, eight spread through the gallery. Each is cropped to a frame around its subject.
+ */
+async function filmFrames() {
+  const photos = await listWorks('photo');
+  if (!photos.length) return [];
+  const marked = photos.filter(p => p.film);
+  const n = Math.min(8, photos.length);
+  return (marked.length ? marked.slice(0, 8) : Array.from({ length: n }, (_, i) => photos[Math.floor((i * photos.length) / n)])).map(p => `${p.src}${p.src.includes('?') ? '&' : '?'}tr=w-720,h-540,fo-auto`);
+}
 
 /**
  * The hero: the living desert (red sun by day, red crescent by night, same spot), with a soft fade of the
  * page colour so the words sit on the calm sky. Words left, the sun between, the portrait right, its top
  * level with the name. It runs up behind the transparent header.
  */
-export default function Hero() {
+export default async function Hero() {
+  const [{ site: SITE }, frames] = await Promise.all([getContent(), filmFrames()]);
   return (
     <section
       id="home"
       className="relative isolate -mt-16 grid min-h-[clamp(860px,100vh,900px)] grid-cols-1 items-start gap-10 px-[clamp(24px,4vw,48px)] pt-32 pb-28 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16 md:pt-36"
     >
       <DesertScene />
-      <HeroFilm />
+      <HeroFilm frames={frames} />
       <div aria-hidden="true" className="desert-fade absolute inset-0 -z-10" />
 
       <div className="flex min-w-0 flex-col gap-6">

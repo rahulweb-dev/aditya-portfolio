@@ -1,0 +1,8 @@
+import type { Metadata } from 'next';
+
+// The dashboard is private: keep it out of search engines.
+export const metadata: Metadata = { title: 'Adyssey CMS', robots: { index: false, follow: false } };
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen bg-bg text-fg">{children}</div>;
+}

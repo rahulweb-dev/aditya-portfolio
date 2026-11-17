@@ -1,4 +1,5 @@
-// Everything you'd want to edit lives here. Details come from G.L. Aditya Vardhan's resume.
+// The site's text. These are the starting values: once saved in the Content studio (/admin) the
+// copy in MongoDB is used instead (see lib/cms/content.ts). Details come from G.L. Aditya Vardhan's resume.
 
 export const SITE = {
   name: 'Aditya',
@@ -51,7 +52,7 @@ export const LANGUAGES = ['English', 'Hindi', 'Telugu', 'Kannada'];
 export type SkillKey = 'design' | 'photo' | 'video' | 'ai';
 
 export type Project = {
-  img: string;
+  img?: string; // optional: the real pieces show in the gallery
   title: string;
   tag: string; // one line under the title
   kicker: string; // small caps line next to the icon
@@ -72,7 +73,8 @@ export type Room = {
   projects: Project[];
 };
 
-// Four doors, left to right. Project images in /public/assets are placeholders: swap in real work.
+// Four doors, left to right. Each craft's pieces (images and videos) live on ImageKit and are managed at /admin;
+// the projects below are written highlights shown under them.
 export const ROOMS: Room[] = [
   {
     key: 'design',
@@ -85,7 +87,6 @@ export const ROOMS: Room[] = [
     points: ['Social media posts & carousels', 'Instagram grid layouts', 'Meta Ads & Google Display banners', 'Posters, banners & print'],
     projects: [
       {
-        img: '/assets/city.jpg',
         title: 'Automotive social media',
         tag: 'BroaddCast Business Solutions',
         kicker: 'Social · Automotive',
@@ -93,7 +94,6 @@ export const ROOMS: Room[] = [
         chips: ['Social posts', 'Carousels', 'Brand consistency'],
       },
       {
-        img: '/assets/forest.jpg',
         title: 'Amaya Senior Living',
         tag: 'By Vera Vita · BroaddCast Business Solutions',
         kicker: 'Campaign · Real estate',
@@ -101,7 +101,6 @@ export const ROOMS: Room[] = [
         chips: ['Instagram grid', 'Reels', 'Ad banners'],
       },
       {
-        img: '/assets/mono.jpg',
         title: 'Performance ad creatives',
         tag: 'BroaddCast Business Solutions',
         kicker: 'Ads · Meta & Google',
@@ -109,7 +108,6 @@ export const ROOMS: Room[] = [
         chips: ['Meta Ads', 'Google Display'],
       },
       {
-        img: '/assets/flare.jpg',
         title: 'NSS event creatives',
         tag: 'NSS, REVA University',
         kicker: 'Print · Events',
@@ -127,25 +125,7 @@ export const ROOMS: Room[] = [
     motto: 'Every pixel, considered',
     lead: 'Photographs and edits that tell a story, with a consistent look from the shoot to the final grade.',
     points: ['Visual storytelling', 'Artistic direction & consistency', 'Colour grading', 'Post-production'],
-    // Placeholders: add your own shoots here (images go in /public/assets).
-    projects: [
-      {
-        img: '/assets/portrait.jpg',
-        title: '[Your photo series]',
-        tag: '[Client or personal project]',
-        kicker: 'Photography · [Type]',
-        blurb: '[The story behind the shoot, the look you went for and how you edited it.]',
-        chips: ['Visual storytelling', 'Colour grading'],
-      },
-      {
-        img: '/assets/dune.jpg',
-        title: '[Your photo series]',
-        tag: '[Client or personal project]',
-        kicker: 'Photography · [Type]',
-        blurb: '[The story behind the shoot, the look you went for and how you edited it.]',
-        chips: ['Artistic direction', 'Post-production'],
-      },
-    ],
+    projects: [], // the photographs speak for themselves
   },
   {
     key: 'video',
@@ -158,31 +138,18 @@ export const ROOMS: Room[] = [
     points: ['Reels & short-form edits', 'Social media video', 'Colour & sound'],
     projects: [
       {
-        img: '/assets/city.jpg',
         title: 'Brand reels',
         tag: 'BroaddCast Business Solutions',
         kicker: 'Reels · Social',
         blurb: 'Reels and video edits for brand social media accounts.',
         chips: ['Premiere Pro', 'CapCut'],
-        film: true,
       },
       {
-        img: '/assets/forest.jpg',
         title: 'Amaya Senior Living reels',
         tag: 'By Vera Vita',
         kicker: 'Reels · Campaign',
         blurb: 'Reels made for the Amaya Senior Living campaign alongside its Instagram grid and ad banners.',
         chips: ['Reels', 'Campaign'],
-        film: true,
-      },
-      {
-        img: '/assets/sea.jpg',
-        title: '[Your shoot]',
-        tag: '[Client or project]',
-        kicker: 'Videography · [Type]',
-        blurb: '[What you shot, on what, and how you cut it.]',
-        chips: ['[Camera]'],
-        film: true,
       },
     ],
   },
@@ -197,16 +164,13 @@ export const ROOMS: Room[] = [
     points: ['AI-generated videos', 'Concepts & mockups', 'Visual variations', 'Faster workflows'],
     projects: [
       {
-        img: '/assets/flare.jpg',
         title: 'AI videos for social media',
         tag: 'BroaddCast Business Solutions',
         kicker: 'AI · Video',
         blurb: 'AI-generated videos for social media, plus AI tools used to improve production quality and speed up workflows.',
         chips: ['AI video', 'Social media'],
-        film: true,
       },
       {
-        img: '/assets/sea.jpg',
         title: 'Concepts & mockups',
         tag: 'GIVA',
         kicker: 'AI · Concepts',
@@ -217,7 +181,8 @@ export const ROOMS: Room[] = [
   },
 ];
 
-export const isSkill = (k: string): k is SkillKey => ROOMS.some(r => r.key === k);
+export const SKILLS: SkillKey[] = ['design', 'photo', 'video', 'ai'];
+export const isSkill = (k: string): k is SkillKey => (SKILLS as string[]).includes(k);
 
 export type StoryEntry = {
   year: number;
@@ -298,3 +263,25 @@ export const STORY: StoryEntry[] = [
     points: ['Where it started.'],
   },
 ];
+
+export type Role = { article: string; word: string };
+export type Ability = { skill: string; detail: string };
+
+/** Everything editable, as one object: what the site reads and the Content studio edits. */
+export type SiteContent = {
+  site: typeof SITE;
+  brand: typeof BRAND;
+  roles: Role[];
+  ability: { abilities: Ability[]; tools: string[]; certifications: string[]; languages: string[] };
+  rooms: Room[];
+  story: StoryEntry[];
+};
+
+export const DEFAULT_CONTENT: SiteContent = {
+  site: SITE,
+  brand: BRAND,
+  roles: ROLES,
+  ability: { abilities: ABILITIES, tools: TOOLS, certifications: CERTIFICATIONS, languages: LANGUAGES },
+  rooms: ROOMS,
+  story: STORY,
+};

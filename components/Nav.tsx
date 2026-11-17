@@ -7,7 +7,8 @@ import Logo from './Logo';
 import ModeSwitch from './ModeSwitch';
 import RoleIcon from './RoleIcon';
 import { SolidButton, StatusBadge } from './ui';
-import { ROOMS, SITE, type SkillKey } from '@/lib/content';
+import type { SkillKey } from '@/lib/content';
+import { useContent } from './ContentProvider';
 
 type Section = 'home' | 'work' | 'story' | 'contact';
 
@@ -50,6 +51,7 @@ function useScrolled() {
 
 /** The header: transparent over the hero; once you scroll it turns surface-raised with a hairline. */
 export default function Nav({ active }: { active?: SkillKey }) {
+  const SITE = useContent().site;
   const current = useCurrentSection(active);
   const scrolled = useScrolled() || !!active;
 
@@ -62,7 +64,7 @@ export default function Nav({ active }: { active?: SkillKey }) {
           }`}
         >
           <Link href="/#home" aria-label={`Adyssey, ${SITE.fullName}: home`} className="no-underline">
-            <Logo width={160} />
+            <Logo variant="mark" width={58} />
           </Link>
 
           <DesktopLinks current={current} active={active} />
@@ -151,6 +153,7 @@ function DesktopLinks({ current, active }: { current: Section; active?: SkillKey
 
 /** The Work menu is a dark section in both modes, like the doors. */
 function WorkMenu({ active, onPick }: { active?: SkillKey; onPick: () => void }) {
+  const ROOMS = useContent().rooms;
   return (
     <div className="absolute top-full left-1/2 z-40 w-[440px] -translate-x-1/2 animate-drop pt-2">
       <div className="rounded-[20px] border border-line-on-dark bg-dark p-2 text-on-dark">
@@ -248,6 +251,7 @@ function BottomBar({ current, active }: { current: Section; active?: SkillKey })
 }
 
 function WorkSheet({ active, onClose }: { active?: SkillKey; onClose: () => void }) {
+  const ROOMS = useContent().rooms;
   const first = useRef<HTMLAnchorElement>(null);
   useEffect(() => {
     first.current?.focus();

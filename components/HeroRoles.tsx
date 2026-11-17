@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ROLES } from '@/lib/content';
+import { useContent } from './ContentProvider';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -10,6 +10,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * The word on the card is the headline's one italic phrase, in the red for words; "a" becomes "an" for AI.
  */
 export default function HeroRoles({ name }: { name: string }) {
+  const ROLES = useContent().roles;
   const [flips, setFlips] = useState(0);
   const [shown, setShown] = useState(1); // start on "photographer", as in the guidelines
 

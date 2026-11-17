@@ -206,20 +206,27 @@
 
 }
 
-/* ---------- Glowing doors in the dunes (components/GlowDoors.tsx) ----------
-   Resting: a soft glow that breathes. Hover: it brightens and the door rises a touch, the others dim.
-   Opening: the doorway whites out. All eased, nothing snaps. */
+/* ---------- Doorways of light in the dunes (components/GlowDoors.tsx) ----------
+   Resting: half buried, a soft glow that breathes. Hover: it lifts out of the sand, the glow blooms,
+   its name and line appear and the others dim. Opening: the doorway whites out. All eased. */
 .glow-doors .star { animation: twinkle 4s ease-in-out infinite alternate; }
-.gdoor { cursor: pointer; outline: none; transition: opacity 0.8s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-dim='true'] { opacity: 0.42; }
-.gdoor-body { transform-box: fill-box; transition: transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-hover='true'] .gdoor-body { transform: scale(1.045); }
-.gdoor-soft { animation: gdoor-breathe 5.5s ease-in-out infinite alternate; }
-@keyframes gdoor-breathe { from { opacity: 0.8; } to { opacity: 1; } }
-.gdoor-bright { opacity: 0; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor { cursor: pointer; outline: none; }
+/* only the doorway itself answers the mouse, not its glow or the sand around it */
+.gdoor * { pointer-events: none; }
+.gdoor .gdoor-hit { pointer-events: all; }
+.gdoor-body { transition: transform 1s cubic-bezier(0.22, 0.9, 0.3, 1), opacity 0.8s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-body { transform: translateY(var(--rise)); }
+.gdoor[data-dim='true'] .gdoor-body { opacity: 0.4; }
+.gdoor-soft { animation: gdoor-breathe 6s ease-in-out infinite alternate; }
+@keyframes gdoor-breathe { from { opacity: 0.75; } to { opacity: 1; } }
+.gdoor-bright { opacity: 0; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .gdoor[data-hover='true'] .gdoor-bright { opacity: 1; }
-.gdoor-pool { opacity: 0.45; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-hover='true'] .gdoor-pool { opacity: 0.85; }
+.gdoor-rim { opacity: 0.45; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-rim { opacity: 1; }
+.gdoor[data-dim='true'] .gdoor-rim { opacity: 0.15; }
+.gdoor-pool { opacity: 0.4; mix-blend-mode: screen; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-pool { opacity: 0.9; }
+.gdoor[data-dim='true'] .gdoor-pool { opacity: 0.12; }
 .gdoor-icon { opacity: 0; transform: translateY(10px); transition: opacity 0.7s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .gdoor[data-hover='true'] .gdoor-icon { opacity: 0.9; transform: none; }
 .gdoor-flare { opacity: 0; transition: opacity 0.7s ease; }
@@ -231,13 +238,13 @@
   text-transform: uppercase;
   fill: #f3ebe0;
   opacity: 0.5;
-  transition: opacity 0.7s ease;
+  transition: opacity 0.5s ease;
 }
-.gdoor[data-hover='true'] .gdoor-label { opacity: 1; }
-.gdoor-paths { mix-blend-mode: screen; pointer-events: none; }
-.gdoor-path { opacity: 0.22; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor-path[data-hover='true'] { opacity: 0.5; }
-.gdoor-path[data-dim='true'] { opacity: 0.1; }
+.gdoor[data-hover='true'] .gdoor-label { opacity: 0; }
+.gdoor-info { opacity: 0; transform: translateY(8px); transition: opacity 0.7s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-info { opacity: 1; transform: none; }
+.gdoor-title { font-family: var(--font-display); font-size: 34px; fill: #f3ebe0; }
+.gdoor-motto { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; }
 @media (prefers-reduced-motion: reduce) {
   .gdoor-soft, .glow-doors .star { animation: none; }
 }
@@ -293,7 +300,6 @@ html.lenis, html.lenis body { height: auto; }
    0–2s   a pen line traces each stroke, left to right
    1.65s  the cream fill comes in and the pen lines fade
    2.05s  the red lens dot and playhead pop in
-   0.2s+  the red crescent rises behind it, over the night desert
    1.7s+  the night glow rises behind the logo */
 .intro-aura {
   background: radial-gradient(ellipse 30% 28% at 50% 42%, rgba(122, 42, 44, 0.55), transparent 72%);
@@ -301,9 +307,6 @@ html.lenis, html.lenis body { height: auto; }
   opacity: 0;
   animation: intro-show 1.4s ease 1.7s forwards;
 }
-.intro-moon { opacity: 0; transform: translateY(70px); animation: intro-moon-rise 2.2s cubic-bezier(0.22, 0.9, 0.3, 1) 0.2s forwards; }
-@keyframes intro-moon-rise { to { opacity: 1; transform: none; } }
-.intro-moon-glow { transform-box: fill-box; transform-origin: center; animation: glow-pulse 5s ease-in-out 2.4s infinite alternate; }
 .intro-stroke {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
@@ -335,9 +338,7 @@ html.lenis, html.lenis body { height: auto; }
 .intro-reduced .intro-fill,
 .intro-reduced .intro-rec,
 .intro-reduced .intro-aura,
-.intro-reduced .intro-moon,
 .intro-reduced .intro-tagline { opacity: 1; transform: none; }
-.intro-reduced .intro-moon-glow,
 .intro-reduced .desert * { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) {

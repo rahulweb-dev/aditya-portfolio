@@ -1,12 +1,13 @@
 'use client';
 
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { STORY } from '@/lib/content';
+import { useContent } from './ContentProvider';
 import { Eyebrow } from './ui';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export default function Story() {
+  const STORY = useContent().story;
   const [active, setActive] = useState(0);
   const [year, setYear] = useState(STORY[0].year);
   const yearRef = useRef(STORY[0].year);

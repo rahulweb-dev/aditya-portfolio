@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BRAND } from '@/lib/content';
+import { useContent } from './ContentProvider';
 import DesertScene from './DesertScene';
 
 const LOGO_SRC = '/logo/adyssey-logo-stacked-night.svg'; // cream + REC red, Red Sun kit
@@ -55,6 +55,7 @@ function shouldSkip() {
  * the aura glows, then it fades into the site. Plays on every page load; any click or key skips it.
  */
 export default function BrandIntro() {
+  const BRAND = useContent().brand;
   // Decided once, before anything runs (React may run the setup below twice in development).
   const skip = useRef(shouldSkip());
   const [phase, setPhase] = useState<'show' | 'leaving' | 'gone'>(() => (skip.current ? 'gone' : 'show'));
@@ -117,24 +118,6 @@ export default function BrandIntro() {
 
       {logo && (
         <div className="relative flex -translate-y-[6vh] flex-col items-center gap-6">
-          {/* the red crescent rises behind the logo while it draws (lit on the right, as in the brand) */}
-          <div className="pointer-events-none absolute top-[38%] left-1/2 aspect-square w-[min(92vw,520px)] -translate-x-1/2 -translate-y-1/2">
-            <svg viewBox="0 0 1000 1000" className="intro-moon size-full overflow-visible">
-              <defs>
-                <radialGradient id="intro-moon-glow">
-                  <stop offset="0.45" stopColor="#7A2A2C" stopOpacity="0.75" />
-                  <stop offset="1" stopColor="#7A2A2C" stopOpacity="0" />
-                </radialGradient>
-                <mask id="intro-crescent">
-                  <rect width="1000" height="1000" fill="#fff" />
-                  <circle cx="452" cy="492" r="400" fill="#000" />
-                </mask>
-              </defs>
-              <circle className="intro-moon-glow" cx="500" cy="500" r="700" fill="url(#intro-moon-glow)" />
-              <circle cx="500" cy="500" r="400" fill="#2A1517" opacity="0.85" />
-              <circle cx="500" cy="500" r="400" fill="#D8473A" mask="url(#intro-crescent)" />
-            </svg>
-          </div>
           <svg viewBox={logo.viewBox} className="intro-logo relative w-[min(58vw,340px)] overflow-visible">
             {/* 1. a pen line traces each stroke of the logo, left to right */}
             <g className="intro-strokes">

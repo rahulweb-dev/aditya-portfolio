@@ -1,7 +1,8 @@
-import { ROOMS } from '@/lib/content';
+import { getContent } from '@/lib/cms/content';
 
 /** A slow, endless ticker of the crafts: Bodoni Moda alternating with its italic, red six-point stars between. */
-export default function Marquee() {
+export default async function Marquee() {
+  const ROOMS = (await getContent()).rooms;
   const words = ROOMS.map(r => r.nav);
   const row = (hidden: boolean) => (
     <div aria-hidden={hidden} className="flex shrink-0 items-center gap-12 pr-12">

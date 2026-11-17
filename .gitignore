@@ -6,3 +6,6 @@ next-env.d.ts
 .env*.local
 *.mp4
 .next-test*
+
+# full-size originals of the work (the web versions live in public/work)
+work-originals/

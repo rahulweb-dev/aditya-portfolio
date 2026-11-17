@@ -1,8 +1,9 @@
 import Reveal from './Reveal';
 import { Eyebrow, GhostButton, SolidButton, TextLink } from './ui';
-import { SITE } from '@/lib/content';
+import { getContent } from '@/lib/cms/content';
 
-export default function Contact() {
+export default async function Contact() {
+  const SITE = (await getContent()).site;
   return (
     <section id="contact" className="flex flex-col gap-8 border-t border-line px-[clamp(24px,4vw,48px)] py-[clamp(64px,8vw,128px)]">
       <Reveal className="flex flex-col gap-6">
@@ -18,7 +19,7 @@ export default function Contact() {
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <SolidButton href={`mailto:${SITE.email}`}>Start a project</SolidButton>
-        <GhostButton href={SITE.socials[0].href}>See my ArtStation</GhostButton>
+        {SITE.socials[0] && <GhostButton href={SITE.socials[0].href}>See my {SITE.socials[0].label}</GhostButton>}
         <TextLink href={`mailto:${SITE.email}`}>Let&apos;s talk</TextLink>
       </div>
       <dl className="mt-2 grid grid-cols-1 gap-x-12 gap-y-4 text-[15px] sm:w-fit sm:grid-cols-[repeat(2,auto)] lg:grid-cols-[repeat(4,auto)]">
