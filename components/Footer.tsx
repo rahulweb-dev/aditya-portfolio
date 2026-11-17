@@ -40,7 +40,7 @@ export default async function Footer() {
               </a>
             ))}
           </div>
-          <div className="flex flex-col gap-2 text-muted-on-dark">
+          <div className="col-span-2 flex flex-col gap-2 text-muted-on-dark md:col-span-1">
             <p className={head}>Contact</p>
             <a href={`mailto:${SITE.email}`} className={`${link} [overflow-wrap:anywhere] md:whitespace-nowrap`}>{SITE.email}</a>
             <a href={SITE.phoneHref} className={link}>{SITE.phone}</a>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
 import Logo from '@/components/Logo';
-import { videoPoster, withTr } from '@/lib/ik';
+import { withTr } from '@/lib/ik';
 import ContentEditor, { type EditorView } from './ContentEditor';
 import type { SkillKey } from '@/lib/content';
 
@@ -43,6 +43,53 @@ async function readMeta(file: File): Promise<{ w?: number; h?: number; secs?: nu
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
+}
+
+/** A still from a video (a local file or one of our own), at `at` seconds, as a WebP image. */
+async function grabFrame(source: File | string, at: number): Promise<Blob> {
+  const url = typeof source === 'string' ? source : URL.createObjectURL(source);
+  try {
+    const v = document.createElement('video');
+    v.crossOrigin = 'anonymous';
+    v.muted = true;
+    v.preload = 'auto';
+    v.src = url;
+    await new Promise<void>((res, rej) => {
+      v.onloadedmetadata = () => res();
+      v.onerror = () => rej(new Error('Could not read the video'));
+    });
+    v.currentTime = Math.min(Math.max(0.2, at), Math.max(0.2, v.duration - 0.2));
+    await new Promise<void>((res, rej) => {
+      v.onseeked = () => res();
+      v.onerror = () => rej(new Error('Could not read the video'));
+    });
+    const scale = Math.min(1, 1280 / Math.max(v.videoWidth, v.videoHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(v.videoWidth * scale);
+    c.height = Math.round(v.videoHeight * scale);
+    c.getContext('2d')!.drawImage(v, 0, 0, c.width, c.height);
+    return await new Promise<Blob>((res, rej) => c.toBlob(b => (b ? res(b) : rej(new Error('Could not make the poster'))), 'image/webp', 0.82));
+  } finally {
+    if (typeof source !== 'string') URL.revokeObjectURL(url);
+  }
+}
+
+/** Uploads a poster image to ImageKit's posters folder; returns its address. */
+async function uploadPoster(blob: Blob, name: string): Promise<string> {
+  const auth = await api<{ token: string; expire: number; signature: string; publicKey: string; folder: string }>('/api/admin/upload-auth?kind=poster');
+  const form = new FormData();
+  form.append('file', blob, name);
+  form.append('fileName', name);
+  form.append('folder', auth.folder);
+  form.append('useUniqueFileName', 'true');
+  form.append('publicKey', auth.publicKey);
+  form.append('signature', auth.signature);
+  form.append('expire', String(auth.expire));
+  form.append('token', auth.token);
+  const r = await fetch('https://upload.imagekit.io/api/v1/files/upload', { method: 'POST', body: form });
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.message ?? 'Could not upload the poster');
+  return String(body.url).split('?')[0];
 }
 
 async function api<T>(url: string, init?: RequestInit): Promise<T> {
@@ -145,10 +192,20 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
         });
         // if the browser couldn't read its size, use ImageKit's
         if (!meta.w && res.width && res.height) await api(`/api/admin/works/${res.fileId}`, { method: 'PATCH', body: JSON.stringify({ w: res.width, h: res.height }) });
+        // a video gets a poster image, taken 40% of the way in (many clips open on black)
+        const video = file.type.startsWith('video/');
+        let poster: string | undefined;
+        if (video) {
+          try {
+            poster = await uploadPoster(await grabFrame(file, (meta.secs ?? 0) * 0.4), cleanName(file.name).replace(/.[a-z0-9]+$/, '') + '.webp');
+            await api(`/api/admin/works/${res.fileId}`, { method: 'PATCH', body: JSON.stringify({ poster }) });
+          } catch {
+            /* the site falls back to ImageKit's own thumbnail */
+          }
+        }
         patch(job.id, { status: 'done', progress: 100 });
         ok++;
         // show it at once (ImageKit's listing can take a few seconds to include new files)
-        const video = file.type.startsWith('video/');
         const added: Work = {
           id: res.fileId,
           name: res.name,
@@ -157,7 +214,7 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
           h: meta.h || res.height || 1500,
           title: null,
           order: startOrder + i + 1,
-          ...(video ? { poster: videoPoster(res.url, meta.secs ?? 0), secs: meta.secs ?? 0 } : {}),
+          ...(video ? { src: withTr(res.url, 'orig-true'), poster: poster ?? withTr(res.url, 'orig-true'), secs: meta.secs ?? 0 } : {}),
         };
         setWorks(prev => ({ ...prev, [target]: [...(prev[target] ?? []), added] }));
       } catch (e) {
@@ -208,7 +265,7 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
     saveOrder(next);
   }
 
-  /** Photographs: show on (or take off) the film strip in the hero. As many as you like. */
+  /** Show on (or take off) the film strip in the hero: photographs, and films (as a still with ▶). As many as you like. */
   async function toggleFilm(w: Work) {
     const on = !w.film;
     setWorks(prev => ({ ...prev, [craft]: (prev[craft] ?? []).map(x => (x.id === w.id ? { ...x, film: on } : x)) }));
@@ -226,10 +283,11 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
   async function setPosterAt(w: Work, value: string) {
     const at = value.trim() === '' ? 0 : Math.max(0, Math.min(Math.floor(w.secs ?? 0), Math.round(Number(value))));
     if (!Number.isFinite(at) || at === (w.thumb ?? 0)) return;
-    const poster = videoPoster(w.src, w.secs ?? 0, at || undefined);
-    setWorks(prev => ({ ...prev, [craft]: (prev[craft] ?? []).map(x => (x.id === w.id ? { ...x, thumb: at || undefined, poster } : x)) }));
     try {
-      await api(`/api/admin/works/${w.id}`, { method: 'PATCH', body: JSON.stringify({ thumb: at }) });
+      say('Making the poster…');
+      const poster = await uploadPoster(await grabFrame(w.src, at || (w.secs ?? 0) * 0.4), w.name.replace(/.[a-z0-9]+$/i, '') + '-poster.webp');
+      await api(`/api/admin/works/${w.id}`, { method: 'PATCH', body: JSON.stringify({ thumb: at, poster }) });
+      setWorks(prev => ({ ...prev, [craft]: (prev[craft] ?? []).map(x => (x.id === w.id ? { ...x, thumb: at || undefined, poster } : x)) }));
       refreshSite();
       say('Poster updated.');
     } catch (e) {
@@ -389,7 +447,7 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
         {/* the pieces */}
         <div className="mt-10 flex items-end justify-between gap-4">
           <p className="micro-caps m-0 text-soft">
-            {loading && !list.length ? 'Loading…' : `${list.length} pieces · drag to reorder · titles save when you press Enter or click away${craft === 'photo' ? ` · ★ ${list.filter(w => w.film).length} on the hero's film strip (in this order)` : ''}`}
+            {loading && !list.length ? 'Loading…' : `${list.length} pieces · drag to reorder · titles save when you press Enter or click away${` · ★ ${list.filter(w => w.film).length} on the hero's film strip`}`}
           </p>
         </div>
         <ul className="mt-4 grid list-none grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4 p-0">
@@ -413,13 +471,13 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
                 <img src={thumb(w)} alt="" loading="lazy" draggable={false} className="size-full object-cover" />
                 <span className="micro-caps absolute top-2 left-2 rounded-full bg-[#140D0E]/80 px-2 py-1 text-[#F3EBE0]">{pad(i + 1)}</span>
                 {w.poster && <span className="micro-caps absolute top-2 right-2 rounded-full bg-[#140D0E]/80 px-2 py-1 text-[#F3EBE0]">▶ {clock(w.secs)}</span>}
-                {craft === 'photo' && (
+                {(
                   <button
                     type="button"
                     onClick={() => toggleFilm(w)}
                     aria-pressed={!!w.film}
                     title={w.film ? 'On the film strip: click to take it off' : 'Show on the film strip in the hero'}
-                    className={`micro-caps absolute top-2 right-2 cursor-pointer rounded-full border-0 px-2.5 py-1 ${w.film ? 'bg-rec text-white' : 'bg-[#140D0E]/70 text-[#F3EBE0] hover:bg-[#140D0E]/90'}`}
+                    className={`micro-caps absolute ${w.poster ? 'bottom-2' : 'top-2'} right-2 cursor-pointer rounded-full border-0 px-2.5 py-1 ${w.film ? 'bg-rec text-white' : 'bg-[#140D0E]/70 text-[#F3EBE0] hover:bg-[#140D0E]/90'}`}
                   >
                     {w.film ? '★ Film strip' : '☆ Film strip'}
                   </button>

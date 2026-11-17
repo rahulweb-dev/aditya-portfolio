@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { withTr } from '@/lib/ik';
 
 export type WorkItem = { id?: string; src: string; w: number; h: number; title: string | null; poster?: string; secs?: number };
@@ -27,25 +28,6 @@ export default function WorkGallery({ items, label }: { items: WorkItem[]; label
   const close = useCallback(() => setOpen(null), []);
   const step = useCallback((d: number) => setOpen(i => (i === null ? i : (i + d + items.length) % items.length)), [items.length]);
 
-  // While the viewer is open: keys, and the page holds still
-  useEffect(() => {
-    if (open === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-      if (e.key === 'ArrowRight') step(1);
-      if (e.key === 'ArrowLeft') step(-1);
-    };
-    addEventListener('keydown', onKey);
-    lenis()?.stop();
-    const overflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      removeEventListener('keydown', onKey);
-      lenis()?.start();
-      document.documentElement.style.overflow = overflow;
-    };
-  }, [open, close, step]);
-
   return (
     <>
       <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
@@ -53,7 +35,7 @@ export default function WorkGallery({ items, label }: { items: WorkItem[]; label
           <Tile key={it.src} item={it} index={i} label={label} onOpen={() => setOpen(i)} video={isVideo(it)} />
         ))}
       </div>
-      {open !== null && <Viewer items={items} index={open} label={label} onClose={close} onStep={step} />}
+      {open !== null && <WorkViewer items={items} index={open} label={label} onClose={close} onStep={step} />}
     </>
   );
 }
@@ -110,13 +92,35 @@ function Tile({ item, index, label, onOpen, video }: { item: WorkItem; index: nu
   );
 }
 
-function Viewer({ items, index, label, onClose, onStep }: { items: WorkItem[]; index: number; label: string; onClose: () => void; onStep: (d: number) => void }) {
+/**
+ * A piece full screen: the photo large (or the film playing), its title, a counter and arrows.
+ * Keys: ← → to move, Esc to close; swipe on phones. Opens with a soft zoom from `from` (where it was clicked).
+ */
+export function WorkViewer({ items, index, label, onClose, onStep, from }: { items: WorkItem[]; index: number; label: string; onClose: () => void; onStep: (d: number) => void; from?: { x: number; y: number } }) {
+  // while open: keys, and the page holds still
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onStep(1);
+      if (e.key === 'ArrowLeft') onStep(-1);
+    };
+    addEventListener('keydown', onKey);
+    lenis()?.stop();
+    const overflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      removeEventListener('keydown', onKey);
+      lenis()?.start();
+      document.documentElement.style.overflow = overflow;
+    };
+  }, [onClose, onStep]);
   const it = items[index];
   const video = !!it.poster;
   const name = it.title ?? `${label} ${String(index + 1).padStart(2, '0')}`;
   const touch = useRef<number | null>(null);
 
-  return (
+  // drawn at the top of the page, above the menu bar, wherever it was opened from
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -130,9 +134,13 @@ function Viewer({ items, index, label, onClose, onStep }: { items: WorkItem[]; i
         if (Math.abs(dx) > 50) onStep(dx < 0 ? 1 : -1);
         touch.current = null;
       }}
-      className="fixed inset-0 z-[80] flex animate-[fade-in_0.3s_ease] flex-col items-center justify-center bg-[#0E0A0B]/[0.97] px-4 py-16 backdrop-blur-md"
+      className="fixed inset-0 z-[90] flex animate-[fade-in_0.3s_ease] flex-col items-center justify-center bg-[#0E0A0B]/[0.97] px-4 py-16 backdrop-blur-md"
     >
-      <div className="relative flex max-h-full w-full max-w-[min(1400px,100%)] flex-1 items-center justify-center" onClick={e => e.stopPropagation()}>
+      <div
+        className="viewer-pop relative flex max-h-full w-full max-w-[min(1400px,100%)] flex-1 items-center justify-center"
+        style={from ? { transformOrigin: `${from.x - 16}px ${from.y - 64}px` } : undefined}
+        onClick={e => e.stopPropagation()}
+      >
         {video ? (
           <video key={it.src} src={it.src} poster={it.poster} controls autoPlay playsInline className="max-h-[78vh] max-w-full rounded-lg bg-black" />
         ) : (
@@ -165,6 +173,7 @@ function Viewer({ items, index, label, onClose, onStep }: { items: WorkItem[]; i
       <button type="button" onClick={onClose} aria-label="Close" className="label-caps absolute top-5 right-5 cursor-pointer rounded-full border border-[#F3EBE0]/30 bg-transparent px-4 py-2 text-[#F3EBE0] hover:bg-[#F3EBE0]/10">
         Close ✕
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

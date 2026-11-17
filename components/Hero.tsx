@@ -6,17 +6,35 @@ import HeroFilm from './HeroFilm';
 import { Eyebrow, GhostButton, SolidButton } from './ui';
 import { getContent } from '@/lib/cms/content';
 import { listWorks } from '@/lib/cms/imagekit';
+import { withTr } from '@/lib/ik';
+import type { FilmFrame } from './three/FilmStrip';
 
 /**
- * Photographs for the film strip: the ones marked "Film strip" in the Content studio (in gallery order),
- * as many as are marked; if none are, eight spread through the gallery. Each is cropped to a frame around its subject.
+ * The film strip: every photograph and film marked "Film strip" in the Content studio, as many as are
+ * marked (photos in gallery order, films spread evenly among them, shown by a still with ▶). If nothing
+ * is marked, eight photographs spread through the gallery. Each is cropped to a frame around its subject.
  */
-async function filmFrames() {
-  const photos = await listWorks('photo');
-  if (!photos.length) return [];
-  const marked = photos.filter(p => p.film);
-  const n = Math.min(8, photos.length);
-  return (marked.length ? marked : Array.from({ length: n }, (_, i) => photos[Math.floor((i * photos.length) / n)])).map(p => `${p.src}${p.src.includes('?') ? '&' : '?'}tr=w-720,h-540,fo-auto`);
+async function filmFrames(): Promise<FilmFrame[]> {
+  const [photos, videos, ai] = await Promise.all([listWorks('photo'), listWorks('video'), listWorks('ai')]);
+  const still = (src: string) => withTr(src, 'w-720,h-540,fo-auto');
+  const item = (w: (typeof photos)[number]) => ({ src: w.src, w: w.w, h: w.h, title: w.title, poster: w.poster, secs: w.secs });
+  let pics: FilmFrame[] = photos.filter(p => p.film).map(p => ({ src: still(p.src), item: item(p) }));
+  const films: FilmFrame[] = [...videos, ...ai].filter(v => v.film && v.poster).map(v => ({ src: still(v.poster!), secs: v.secs ?? 0, item: item(v) }));
+  if (!pics.length && !films.length) {
+    const n = Math.min(8, photos.length);
+    pics = Array.from({ length: n }, (_, i) => photos[Math.floor((i * photos.length) / n)]).map(p => ({ src: still(p.src), item: item(p) }));
+  }
+  if (!films.length) return pics;
+  // spread the films evenly through the photographs
+  const out: FilmFrame[] = [];
+  const every = (pics.length + films.length) / films.length;
+  let f = 0;
+  for (let i = 0, p = 0; i < pics.length + films.length; i++) {
+    if (f < films.length && i >= Math.round(f * every + every / 2 - 0.5)) out.push(films[f++]);
+    else if (p < pics.length) out.push(pics[p++]);
+    else out.push(films[f++]);
+  }
+  return out;
 }
 
 /**

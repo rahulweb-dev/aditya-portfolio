@@ -207,8 +207,14 @@
 }
 
 /* ---------- Doorways of light in the dunes (components/GlowDoors.tsx) ----------
-   Resting: half buried, a soft glow that breathes. Hover: it lifts out of the sand, the glow blooms,
-   its name and line appear and the others dim. Opening: the doorway whites out. All eased. */
+   The scene follows the site: dunes under a paper sky by day, under stars by night.
+   Resting: the sand hides each door's foot and its glow breathes softly. Hover: the door lifts a
+   little, its light blooms and spills on the sand, the others dim. Opening: the doorway whites out. */
+:root, [data-theme='light'] { --gd-stone-top: #9c7a58; --gd-stone-bottom: #6b4c36; }
+[data-theme='dark'] { --gd-stone-top: #3a2826; --gd-stone-bottom: #1a1112; }
+.glow-doors .gd-night { opacity: 0; transition: opacity 1.2s ease; }
+[data-theme='dark'] .glow-doors .gd-night { opacity: 1; }
+.glow-doors .gd-dune { transition: fill 0.8s ease; }
 .glow-doors .star { animation: twinkle 4s ease-in-out infinite alternate; }
 .gdoor { cursor: pointer; outline: none; }
 /* only the doorway itself answers the mouse, not its glow or the sand around it */
@@ -216,16 +222,19 @@
 .gdoor .gdoor-hit { pointer-events: all; }
 .gdoor-body { transition: transform 1s cubic-bezier(0.22, 0.9, 0.3, 1), opacity 0.8s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .gdoor[data-hover='true'] .gdoor-body { transform: translateY(var(--rise)); }
-.gdoor[data-dim='true'] .gdoor-body { opacity: 0.4; }
-.gdoor-soft { animation: gdoor-breathe 6s ease-in-out infinite alternate; }
-@keyframes gdoor-breathe { from { opacity: 0.75; } to { opacity: 1; } }
+.gdoor[data-dim='true'] .gdoor-body { opacity: 0.45; }
+.gdoor-soft { opacity: 0.8; animation: gdoor-breathe 6s ease-in-out infinite alternate; }
+@keyframes gdoor-breathe { from { opacity: 0.68; } to { opacity: 0.92; } }
+[data-theme='light'] .gdoor-soft { animation-name: gdoor-breathe-day; }
+@keyframes gdoor-breathe-day { from { opacity: 0.5; } to { opacity: 0.72; } }
 .gdoor-bright { opacity: 0; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-hover='true'] .gdoor-bright { opacity: 1; }
-.gdoor-rim { opacity: 0.45; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-hover='true'] .gdoor-rim { opacity: 1; }
-.gdoor[data-dim='true'] .gdoor-rim { opacity: 0.15; }
-.gdoor-pool { opacity: 0.4; mix-blend-mode: screen; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-bright { opacity: 0.95; }
+[data-theme='light'] .gdoor[data-hover='true'] .gdoor-bright { opacity: 0.7; }
+/* light spilling onto the sand in front: added light at night, a soft tint of colour by day */
+.gdoor-pool { opacity: 0.45; mix-blend-mode: screen; transition: opacity 1s cubic-bezier(0.22, 0.9, 0.3, 1); }
+[data-theme='light'] .gdoor-pool { mix-blend-mode: normal; opacity: 0.22; }
 .gdoor[data-hover='true'] .gdoor-pool { opacity: 0.9; }
+[data-theme='light'] .gdoor[data-hover='true'] .gdoor-pool { opacity: 0.4; }
 .gdoor[data-dim='true'] .gdoor-pool { opacity: 0.12; }
 .gdoor-icon { opacity: 0; transform: translateY(10px); transition: opacity 0.7s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .gdoor[data-hover='true'] .gdoor-icon { opacity: 0.9; transform: none; }
@@ -236,15 +245,11 @@
   font-size: 15px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  fill: #f3ebe0;
-  opacity: 0.5;
-  transition: opacity 0.5s ease;
+  fill: var(--fg);
+  opacity: 0.55;
+  transition: opacity 0.6s ease;
 }
-.gdoor[data-hover='true'] .gdoor-label { opacity: 0; }
-.gdoor-info { opacity: 0; transform: translateY(8px); transition: opacity 0.7s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
-.gdoor[data-hover='true'] .gdoor-info { opacity: 1; transform: none; }
-.gdoor-title { font-family: var(--font-display); font-size: 34px; fill: #f3ebe0; }
-.gdoor-motto { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; }
+.gdoor[data-hover='true'] .gdoor-label { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .gdoor-soft, .glow-doors .star { animation: none; }
 }
@@ -346,3 +351,8 @@ html.lenis, html.lenis body { height: auto; }
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* the work viewer's picture grows out of where it was clicked */
+.viewer-pop { animation: viewer-pop 0.55s cubic-bezier(0.22, 0.9, 0.3, 1); }
+@keyframes viewer-pop { from { opacity: 0; transform: scale(0.82); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .viewer-pop { animation: none; } }

@@ -4,10 +4,14 @@ import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnScreen } from './useThemeColors';
+import type { WorkItem } from '../WorkGallery';
 
 // Frames on the strip: the hero passes in photographs from the Photography gallery (ImageKit).
 // These stock frames are only a fallback if none come through.
-const FALLBACK = ['/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg', '/assets/portrait.jpg'];
+/** One frame on the strip: a photograph, or a film shown by a still (secs = its length). `item` is the piece it opens. */
+export type FilmFrame = { src: string; secs?: number; item?: WorkItem };
+
+const FALLBACK: FilmFrame[] = (['/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg', '/assets/portrait.jpg']).map(src => ({ src }));
 
 // Each frame is drawn 512px square on the film texture, and is 2.25 world units long on the ribbon.
 // The texture holds every photo once; with many photos the frames are drawn a little smaller so the
@@ -34,7 +38,7 @@ const loadImage = (src: string) =>
   });
 
 /** Draws the whole strip once every photo has loaded, so nothing pops in. */
-function useFilmTexture(frames: string[], maxTex: number, onReady: () => void) {
+function useFilmTexture(frames: FilmFrame[], maxTex: number, onReady: () => void) {
   // every chosen photo once (at least a few frames), else the stock frames
   const list = useMemo(
     () => (frames.length ? Array.from({ length: Math.max(MIN_FRAMES, frames.length) }, (_, i) => frames[i % frames.length]) : FALLBACK),
@@ -58,7 +62,7 @@ function useFilmTexture(frames: string[], maxTex: number, onReady: () => void) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(list.map(loadImage)).then(images => {
+    Promise.all(list.map(f => loadImage(f.src))).then(images => {
       if (cancelled) return;
       const g = canvas.getContext('2d')!;
       g.setTransform(px / FRAME_PX, 0, 0, px / FRAME_PX, 0, 0); // draw in 512px frames, whatever the size
@@ -98,6 +102,41 @@ function useFilmTexture(frames: string[], maxTex: number, onReady: () => void) {
         g.clip();
         g.drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, fx, band, fw, fh);
         g.restore();
+        // a film: a play button in the middle and its running time in the corner
+        const secs = list[i].secs;
+        if (secs !== undefined) {
+          const cx = fx + fw / 2;
+          const cy = band + fh / 2;
+          g.fillStyle = 'rgba(20, 13, 14, 0.62)';
+          g.beginPath();
+          g.arc(cx, cy, 44, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = 'rgba(243, 235, 224, 0.85)';
+          g.lineWidth = 3;
+          g.stroke();
+          g.fillStyle = '#F3EBE0';
+          g.beginPath();
+          g.moveTo(cx - 13, cy - 20);
+          g.lineTo(cx + 22, cy);
+          g.lineTo(cx - 13, cy + 20);
+          g.closePath();
+          g.fill();
+          const label = `${Math.floor(secs / 60)}:${String(Math.round(secs) % 60).padStart(2, '0')}`;
+          g.font = '700 22px "Space Mono", ui-monospace, Consolas, monospace';
+          const tw = g.measureText(label).width;
+          g.fillStyle = 'rgba(20, 13, 14, 0.72)';
+          g.beginPath();
+          g.roundRect(fx + 14, band + 14, tw + 48, 36, 18);
+          g.fill();
+          g.fillStyle = '#FF5A48';
+          g.beginPath();
+          g.arc(fx + 34, band + 32, 6, 0, Math.PI * 2);
+          g.fill();
+          g.fillStyle = '#F3EBE0';
+          g.fillText(label, fx + 46, band + 40);
+          g.font = '400 20px "Space Mono", ui-monospace, Consolas, monospace';
+          g.fillStyle = '#E3CFAE';
+        }
       });
       texture.needsUpdate = true;
       onReady();
@@ -107,18 +146,23 @@ function useFilmTexture(frames: string[], maxTex: number, onReady: () => void) {
     };
   }, [canvas, texture, onReady, list, n, px]);
 
-  return { texture, period: n * FRAME_WORLD };
+  return { texture, period: n * FRAME_WORLD, n };
 }
 
-function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => void; still: boolean }) {
-  const group = useRef<THREE.Group>(null);
+function Strip({ frames, onReady, still, onOpen }: { frames: FilmFrame[]; onReady: () => void; still: boolean; onOpen?: (index: number, at: { x: number; y: number }) => void }) {
   const maxTex = useThree(s => s.gl.capabilities.maxTextureSize);
-  const { texture, period } = useFilmTexture(frames, maxTex, onReady);
-  const geometry = useMemo(() => new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 360, 1), []);
+  const { texture, period, n } = useFilmTexture(frames, maxTex, onReady);
+  const geometry = useMemo(() => {
+    const g = new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 360, 1);
+    // the ribbon bends as it rolls: a roomier bounding sphere so clicks are never missed
+    g.computeBoundingSphere();
+    g.boundingSphere!.radius += 1.5;
+    return g;
+  }, []);
   const base = useMemo(() => Float32Array.from(geometry.attributes.position.array), [geometry]);
   const time = useRef(0);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     const dt = Math.min(delta, 1 / 20); // after a pause, never jump
     if (!still) time.current += dt;
     const t = time.current;
@@ -137,17 +181,25 @@ function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => vo
     }
     pos.needsUpdate = true;
 
-    // A gentle lean towards the mouse, eased so it never snaps
-    if (group.current) {
-      const s = 1 - Math.exp(-2 * dt);
-      group.current.rotation.x += (-state.pointer.y * 0.12 - group.current.rotation.x) * s;
-      group.current.rotation.y += (state.pointer.x * 0.16 - group.current.rotation.y) * s;
-    }
   });
 
   return (
-    <group ref={group}>
-      <mesh geometry={geometry} rotation-z={0.15} position={[0.4, -2.35, -0.5]} scale={0.8}>
+    <group>
+      <mesh
+        onClick={e => {
+          // a click that landed on a button, link or the portrait belongs to them, not the film
+          const target = e.nativeEvent.target as Element | null;
+          if (!onOpen || !frames.length || target?.closest('a, button, [role="button"], [role="switch"], figure, input, label, header, nav')) return;
+          if (!e.uv) return;
+          e.stopPropagation();
+          // which frame: where on the film this point is, given how far it has rolled
+          const u = (((e.uv.x * texture.repeat.x + texture.offset.x) % 1) + 1) % 1;
+          const frame = Math.floor(u * n) % frames.length;
+          onOpen(frame, { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY });
+        }}
+        onPointerOver={() => onOpen && (document.body.style.cursor = 'pointer')}
+        onPointerOut={() => (document.body.style.cursor = '')}
+        geometry={geometry} rotation-z={0.15} position={[0.4, -2.35, -0.5]} scale={0.8}>
         {/* Unlit: no lighting maths per pixel, which keeps the hero smooth */}
         <meshBasicMaterial map={texture} side={THREE.DoubleSide} />
       </mesh>
@@ -155,8 +207,8 @@ function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => vo
   );
 }
 
-/** 3D film strip that flows across the dunes behind the hero and leans towards the mouse. */
-export default function FilmStrip({ frames = [] }: { frames?: string[] }) {
+/** 3D film strip that flows across the dunes behind the hero. Click a frame to open that piece. */
+export default function FilmStrip({ frames = [], onOpen }: { frames?: FilmFrame[]; onOpen?: (index: number, at: { x: number; y: number }) => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const onScreen = useOnScreen(wrap);
   const [ready, setReady] = useState(false);
@@ -179,7 +231,7 @@ export default function FilmStrip({ frames = [] }: { frames?: string[] }) {
         eventSource={typeof document !== 'undefined' ? document.body : undefined}
         eventPrefix="client"
       >
-        <Strip frames={frames} onReady={markReady} still={still} />
+        <Strip frames={frames} onReady={markReady} still={still} onOpen={onOpen} />
       </Canvas>
     </div>
   );

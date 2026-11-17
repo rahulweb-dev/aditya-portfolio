@@ -1,7 +1,7 @@
 import 'server-only';
 import crypto from 'node:crypto';
 import type { SkillKey } from '@/lib/content';
-import { videoPoster } from '@/lib/ik';
+import { videoPoster, withTr } from '@/lib/ik';
 
 // ImageKit holds the work's images and videos, one folder per craft: <IMAGEKIT_FOLDER>/<craft>/.
 // Each file carries its own details as custom metadata: title, order, w, h, secs.
@@ -16,8 +16,9 @@ export const CRAFTS: SkillKey[] = ['design', 'photo', 'video', 'ai'];
 export const configured = () => !!(PRIVATE && PUBLIC && URL_ENDPOINT);
 const auth = () => 'Basic ' + Buffer.from(PRIVATE + ':').toString('base64');
 export const folderOf = (craft: SkillKey) => `${FOLDER}/${craft}`;
+export const POSTERS = `${FOLDER}/posters`;
 
-export type Meta = { title?: string; order?: number; w?: number; h?: number; secs?: number; film?: number; thumb?: number };
+export type Meta = { title?: string; order?: number; w?: number; h?: number; secs?: number; film?: number; thumb?: number; poster?: string };
 type IkFile = {
   fileId: string;
   name: string;
@@ -40,7 +41,7 @@ export type Work = {
   h: number;
   title: string | null;
   order: number;
-  poster?: string; // videos only: a frame ImageKit makes from the video
+  poster?: string; // videos only: the poster image (in the posters folder)
   secs?: number;
   film?: boolean; // photographs: shown on the hero's film strip
   thumb?: number; // videos: the second the poster is taken from (else 40% in)
@@ -60,7 +61,11 @@ function toWork(f: IkFile): Work {
     title: m.title?.trim() || null,
     order: m.order ?? Number.MAX_SAFE_INTEGER,
     ...(m.film ? { film: true } : {}),
-    ...(video ? { poster: videoPoster(f.url, m.secs || f.duration || 0, m.thumb), secs: Math.round(m.secs || f.duration || 0), ...(m.thumb ? { thumb: m.thumb } : {}) } : {}),
+    // videos play from the original file (already web-sized; this uses no video processing allowance),
+    // and their poster is an image of its own
+    ...(video
+      ? { src: withTr(f.url, 'orig-true'), poster: m.poster || videoPoster(f.url, m.secs || f.duration || 0, m.thumb), secs: Math.round(m.secs || f.duration || 0), ...(m.thumb ? { thumb: m.thumb } : {}) }
+      : {}),
   };
 }
 

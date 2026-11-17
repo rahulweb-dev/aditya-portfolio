@@ -14,8 +14,8 @@ const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
 
 // In order, left to right; each on its own dune: mid, far, near, mid
 const PLACES: { key: SkillKey; frac: number; layer: number }[] = [
-  { key: 'design', frac: 0.17, layer: 1 },
-  { key: 'photo', frac: 0.39, layer: 0 },
+  { key: 'photo', frac: 0.17, layer: 1 },
+  { key: 'design', frac: 0.39, layer: 0 },
   { key: 'video', frac: 0.61, layer: 2 },
   { key: 'ai', frac: 0.83, layer: 1 },
 ];
@@ -131,7 +131,7 @@ export default function Doors() {
   const enterDesktop = (key: SkillKey) => enter(key, deskRef.current, deskRef.current?.querySelector(`[data-door="${key}"] [data-core]`));
 
   return (
-    <section id="work" ref={sectionRef} className="relative overflow-hidden bg-[#140D0E]">
+    <section id="work" ref={sectionRef} className="relative overflow-hidden bg-bg">
       {/* Desktop: four doors of light in the dunes. Hover one to light it up and read what's behind it. */}
       <div className="relative hidden h-screen min-h-[680px] md:block">
         <div ref={deskRef} className="absolute inset-0 will-change-transform">
@@ -144,34 +144,53 @@ export default function Doors() {
             className="absolute inset-0 size-full"
           />
           <div className="pointer-events-none absolute inset-x-0 top-[clamp(80px,11vh,120px)] flex flex-col items-center gap-3 px-6 text-center">
-            <Eyebrow onDark>02 — What I do</Eyebrow>
-            <h2 className="m-0 text-[clamp(40px,5vw,72px)] leading-[1.03] tracking-[-0.015em] text-balance text-on-dark">
-              Magic happens <span className="serif-accent text-[#E35A52]">behind the doors</span>
+            <Eyebrow>02 — What I do</Eyebrow>
+            <h2 className="m-0 text-[clamp(40px,5vw,72px)] leading-[1.03] tracking-[-0.015em] text-balance text-fg">
+              Magic happens <span className="serif-accent">behind the doors</span>
             </h2>
           </div>
 
-          <p className="micro-caps pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] m-0 text-center text-muted-on-dark">
-            Hover a door to see what's behind it · click to step through
-          </p>
+          {/* what's behind the door you're looking at, at the bottom in the middle */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] flex justify-center px-6">
+            <div className="relative grid min-h-[104px] w-full max-w-[640px] place-items-center">
+              <p className={`micro-caps col-start-1 row-start-1 m-0 rounded-full border border-line bg-card/80 px-5 py-2.5 text-soft backdrop-blur-md transition-opacity duration-500 ${hovered ? 'opacity-0' : 'opacity-100'}`}>
+                Hover a door to see what&apos;s behind it · click to step through
+              </p>
+              {ROOMS.map(r => (
+                <div
+                  key={r.key}
+                  aria-hidden={hovered !== r.key}
+                  className={`col-start-1 row-start-1 flex flex-col items-center gap-2 rounded-2xl border border-line bg-card/85 px-8 py-4 text-center backdrop-blur-md transition-[opacity,translate] duration-600 ease-[cubic-bezier(0.22,0.9,0.3,1)] ${hovered === r.key ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                >
+                  <h3 className="m-0 text-[clamp(26px,2.4vw,34px)] leading-none font-normal text-fg">{r.title}</h3>
+                  <p className="micro-caps m-0 flex items-center gap-2 text-soft">
+                    <span className="size-2 rounded-full" style={{ background: DOOR_GLOW[r.key], boxShadow: `0 0 8px ${DOOR_GLOW[r.key]}` }} />
+                    {r.motto}
+                  </p>
+                  <p className="label-caps m-0 text-fg">Enter →</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Phones: each door in its own small scene, details beside it */}
       <div ref={phoneRef} className="px-4 pt-24 pb-16 md:hidden">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Eyebrow onDark>02 — What I do</Eyebrow>
-          <h2 className="m-0 text-[44px] leading-[48px] tracking-[-0.015em] text-balance text-on-dark">
-            Magic happens <span className="serif-accent text-[#E35A52]">behind the doors</span>
+          <Eyebrow>02 — What I do</Eyebrow>
+          <h2 className="m-0 text-[44px] leading-[48px] tracking-[-0.015em] text-balance text-fg">
+            Magic happens <span className="serif-accent">behind the doors</span>
           </h2>
         </div>
         <div className="mt-12 flex flex-col gap-10">
           {ROOMS.map((r, i) => (
-            <div key={r.key} className="grid grid-cols-[136px_minmax(0,1fr)] items-center gap-6">
+            <div key={r.key} className="grid grid-cols-[minmax(112px,136px)_minmax(0,1fr)] items-center gap-5">
               <button
                 type="button"
                 aria-label={`Enter ${r.title}`}
                 onClick={e => enter(r.key, phoneRef.current, e.currentTarget.querySelector('[data-core]'))}
-                className="relative block h-[200px] w-full cursor-pointer overflow-hidden rounded-2xl border border-line-on-dark bg-transparent p-0"
+                className="relative block aspect-[136/200] w-full cursor-pointer overflow-hidden rounded-2xl border border-line bg-transparent p-0"
               >
                 <GlowDoors spots={PHONE_SPOTS[r.key]} openKey={openKey === r.key ? r.key : null} scale={2.1} labels={false} interactive={false} phase={20 + i * 23} className="absolute inset-0 size-full" />
               </button>
