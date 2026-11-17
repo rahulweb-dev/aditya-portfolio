@@ -52,6 +52,7 @@ Settings → Environment Variables) for the live site. Never commit them.
 | `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT` | e.g. https://ik.imagekit.io/your_id |
 | `IMAGEKIT_FOLDER` | `/adyssey` |
 | `ADMIN_USERNAME` | the login name |
+| `ADMIN_PASSWORD` | the login password (or, safer, `ADMIN_PASSWORD_HASH` below, which wins if both are set) |
 | `ADMIN_PASSWORD_HASH` | `salt:hash` (scrypt). Make one with: `node -e "const c=require('crypto'),s=c.randomBytes(16).toString('hex');console.log(s+':'+c.scryptSync(process.argv[1],s,64).toString('hex'))" 'new password'` |
 | `AUTH_SECRET` | a long random string that signs the login cookie |
 
