@@ -10,17 +10,15 @@ const NIGHT = ['#FF5A48', '#FF5A48', '#F3EBE0', '#E3CFAE'];
 const MAX = 160;
 
 /**
- * The cursor: a soft ring that trails the pointer (and opens up over anything clickable),
- * shedding fine stardust that drifts down like sand and fades. Mouse and trackpad only.
+ * The cursor's trail: fine stardust shed as the pointer moves, drifting down like sand and fading.
+ * The normal cursor stays as it is. Mouse and trackpad only.
  */
 export default function CursorTrail() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const ring = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!matchMedia('(pointer: fine)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const cv = canvas.current!;
-    const el = ring.current!;
     const ctx = cv.getContext('2d')!;
     const dpr = Math.min(devicePixelRatio || 1, 2);
     const fit = () => {
@@ -31,11 +29,8 @@ export default function CursorTrail() {
     fit();
 
     const parts: P[] = [];
-    const mouse = { x: -100, y: -100, seen: false };
-    const pos = { x: -100, y: -100 }; // where the ring is, easing after the mouse
+    let seen = false;
     let last = { x: 0, y: 0 };
-    let hover = false;
-    let scale = 1; // the ring opens up smoothly over links and buttons
     let raf = 0;
 
     const spawn = (x: number, y: number, dx: number, dy: number) => {
@@ -100,15 +95,8 @@ export default function CursorTrail() {
         }
       }
       ctx.globalAlpha = 1;
-
-      // the ring eases after the pointer
-      pos.x += (mouse.x - pos.x) * 0.2;
-      pos.y += (mouse.y - pos.y) * 0.2;
-      scale += ((hover ? 1.7 : 1) - scale) * 0.18;
-      el.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%) scale(${scale.toFixed(3)})`;
-
-      const settled = Math.abs(mouse.x - pos.x) < 0.1 && Math.abs(mouse.y - pos.y) < 0.1 && Math.abs((hover ? 1.7 : 1) - scale) < 0.002;
-      raf = parts.length || !settled ? requestAnimationFrame(tick) : 0;
+      // keep going only while there is dust in the air
+      raf = parts.length ? requestAnimationFrame(tick) : 0;
     };
     const wake = () => {
       if (!raf) raf = requestAnimationFrame(tick);
@@ -116,15 +104,10 @@ export default function CursorTrail() {
 
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
-      if (!mouse.seen) {
-        mouse.seen = true;
-        pos.x = e.clientX;
-        pos.y = e.clientY;
+      if (!seen) {
+        seen = true;
         last = { x: e.clientX, y: e.clientY };
-        el.style.opacity = '1';
       }
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
       const dx = e.clientX - last.x;
       const dy = e.clientY - last.y;
       if (Math.hypot(dx, dy) > 4) {
@@ -133,36 +116,20 @@ export default function CursorTrail() {
       }
       wake();
     };
-    const onOver = (e: PointerEvent) => {
-      const next = !!(e.target as Element | null)?.closest?.('a, button, [role="switch"], [role="button"], input, textarea, select, label, canvas');
-      if (next !== hover) {
-        hover = next;
-        el.dataset.hover = String(hover);
-        wake();
-      }
-    };
     const onLeave = () => {
-      el.style.opacity = '0';
-      mouse.seen = false;
+      seen = false;
     };
 
     addEventListener('pointermove', onMove, { passive: true });
-    addEventListener('pointerover', onOver, { passive: true });
     document.documentElement.addEventListener('pointerleave', onLeave);
     addEventListener('resize', fit);
     return () => {
       cancelAnimationFrame(raf);
       removeEventListener('pointermove', onMove);
-      removeEventListener('pointerover', onOver);
       document.documentElement.removeEventListener('pointerleave', onLeave);
       removeEventListener('resize', fit);
     };
   }, []);
 
-  return (
-    <>
-      <canvas ref={canvas} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[68] size-full" />
-      <div ref={ring} aria-hidden="true" className="cursor-ring" />
-    </>
-  );
+  return <canvas ref={canvas} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[68] size-full" />;
 }

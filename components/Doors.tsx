@@ -1,26 +1,45 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ROOMS, isSkill, type Room, type SkillKey } from '@/lib/content';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ROOMS, isSkill, type SkillKey } from '@/lib/content';
 import DoorDetails from './DoorDetails';
+import GlowDoors, { DOOR_GLOW, type DoorSpot } from './GlowDoors';
 import { Eyebrow } from './ui';
-import type { Flight } from './three/DoorRoom';
-
-// The 3D room only loads in the browser.
-const DoorRoom = dynamic(() => import('./three/DoorRoom'), { ssr: false });
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+const room = (key: SkillKey) => ROOMS.find(r => r.key === key)!;
 
-/** Phones: zooms the 2D list into one doorway by scaling around its centre. */
-function zoomScene(scene: HTMLElement, target: HTMLElement) {
-  const s = scene.getBoundingClientRect();
-  const t = target.getBoundingClientRect();
-  scene.style.transformOrigin = `${t.left + t.width / 2 - s.left}px ${t.top + t.height * 0.55 - s.top}px`;
-  scene.style.transition = 'transform 0.95s cubic-bezier(0.7, 0, 0.2, 1)';
-  scene.style.transform = 'scale(9)';
+// In order, left to right; each on its own dune: mid, far, near, mid
+const DESKTOP_SPOTS: DoorSpot[] = [
+  { room: room('design'), frac: 0.17, layer: 1 },
+  { room: room('photo'), frac: 0.39, layer: 0 },
+  { room: room('video'), frac: 0.61, layer: 2 },
+  { room: room('ai'), frac: 0.83, layer: 1 },
+];
+// Phones: one door per small scene
+const PHONE_SPOTS: Record<SkillKey, DoorSpot[]> = Object.fromEntries(
+  ROOMS.map(r => [r.key, [{ room: r, frac: 0.5, layer: 1 }]]),
+) as Record<SkillKey, DoorSpot[]>;
+
+const ZOOM = 9;
+
+/**
+ * Steps into a doorway: scales `scene` around the door's centre and slides that centre to the middle
+ * of the screen, so you always walk straight in. Measure before zooming (on = true), not during.
+ */
+function zoomInto(scene: HTMLElement, target: Element, on: boolean, seconds: number) {
+  if (on) {
+    const s = scene.getBoundingClientRect();
+    const t = target.getBoundingClientRect();
+    const ox = t.left + t.width / 2 - s.left;
+    const oy = t.top + t.height / 2 - s.top;
+    scene.style.transformOrigin = `${ox}px ${oy}px`;
+    scene.dataset.shift = `${innerWidth / 2 - s.left - ox}px, ${innerHeight / 2 - s.top - oy}px`;
+  }
+  scene.style.transition = seconds ? `transform ${seconds}s cubic-bezier(0.7, 0, 0.2, 1)` : 'none';
+  scene.style.transform = on ? `translate(${scene.dataset.shift}) scale(${ZOOM})` : 'none';
 }
 
 function fadeBlack(el: HTMLElement | null, on: boolean, duration = '0.6s', delay = '0s') {
@@ -32,32 +51,18 @@ function fadeBlack(el: HTMLElement | null, on: boolean, duration = '0.6s', delay
 export default function Doors() {
   const router = useRouter();
   const sectionRef = useRef<HTMLElement>(null);
+  const deskRef = useRef<HTMLDivElement>(null);
+  const phoneRef = useRef<HTMLDivElement>(null);
   const blackRef = useRef<HTMLDivElement>(null);
   const busy = useRef(false);
-  const ready = useRef(false);
-  const pendingReturn = useRef<SkillKey | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<SkillKey | null>(null);
   const [openKey, setOpenKey] = useState<SkillKey | null>(null);
-  const [flight, setFlight] = useState<Flight>(null);
 
   useEffect(() => {
     ROOMS.forEach(r => router.prefetch(`/work/${r.key}`));
   }, [router]);
 
-  // Coming back from a room: fly back out of that doorway, then close the door.
-  const flyOut = useCallback((key: SkillKey) => {
-    pendingReturn.current = null;
-    setHovered(null);
-    setOpenKey(key);
-    setFlight({ key, dir: 'out' });
-    requestAnimationFrame(() => fadeBlack(blackRef.current, false, '0.6s'));
-    setTimeout(() => setOpenKey(null), 1100);
-    setTimeout(() => {
-      setFlight(null);
-      busy.current = false;
-    }, 1400);
-  }, []);
-
+  // Coming back from a room: start inside that doorway's light and pull back out into the dunes.
   useEffect(() => {
     let key: string | null = null;
     try {
@@ -65,87 +70,120 @@ export default function Doors() {
       sessionStorage.removeItem('returnDoor');
     } catch {}
     if (!key || !isSkill(key) || !sectionRef.current) return;
+    const skill = key;
 
     const top = sectionRef.current.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top, behavior: 'instant' });
     busy.current = true;
     fadeBlack(blackRef.current, true, '0s');
 
-    if (!isDesktop() || reducedMotion()) {
+    const scene = isDesktop() ? deskRef.current : null;
+    const door = scene?.querySelector(`[data-door="${skill}"] [data-core]`);
+    if (!scene || !door || reducedMotion()) {
       requestAnimationFrame(() => fadeBlack(blackRef.current, false, '0.6s'));
       busy.current = false;
       return;
     }
-    // Wait for the 3D scene to exist before flying out of the doorway.
-    if (ready.current) flyOut(key);
-    else pendingReturn.current = key;
-  }, [flyOut]);
-
-  const onReady = useCallback(() => {
-    ready.current = true;
-    if (pendingReturn.current) flyOut(pendingReturn.current);
-  }, [flyOut]);
+    // wait two frames so the doors are in place, then fly out
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setOpenKey(skill);
+        zoomInto(scene, door, true, 0);
+        scene.getBoundingClientRect(); // apply the zoom before easing out of it
+        requestAnimationFrame(() => {
+          zoomInto(scene, door, false, 1.3);
+          fadeBlack(blackRef.current, false, '0.7s');
+        });
+        setTimeout(() => setOpenKey(null), 500);
+        setTimeout(() => {
+          scene.style.transition = '';
+          busy.current = false;
+        }, 1400);
+      }),
+    );
+  }, []);
 
   const enter = useCallback(
-    (key: SkillKey, recess?: HTMLElement | null) => {
+    (key: SkillKey, scene: HTMLElement | null, door: Element | null | undefined) => {
       if (busy.current) return;
       busy.current = true;
       setOpenKey(key);
-      if (reducedMotion()) return router.push(`/work/${key}`);
-
-      if (recess) {
-        // Phones (2D): the door swings, then the list zooms into the doorway.
-        setTimeout(() => {
-          const scene = recess.closest<HTMLElement>('[data-scene]');
-          if (scene) zoomScene(scene, recess);
-          fadeBlack(blackRef.current, true, '0.55s', '0.35s');
-        }, 600);
-      } else {
-        // Desktop (3D): the door swings open and the camera flies through it.
-        setHovered(null);
-        setFlight({ key, dir: 'in' });
-        fadeBlack(blackRef.current, true, '0.45s', '1.05s');
-      }
+      if (reducedMotion() || !scene || !door) return router.push(`/work/${key}`);
+      // the doorway brightens, then we step into its light
+      setTimeout(() => zoomInto(scene, door, true, 1.15), 220);
+      fadeBlack(blackRef.current, true, '0.45s', '1.05s');
       setTimeout(() => router.push(`/work/${key}`), 1550);
     },
     [router],
   );
 
+  const enterDesktop = (key: SkillKey) => enter(key, deskRef.current, deskRef.current?.querySelector(`[data-door="${key}"] [data-core]`));
+  const shown = hovered ? room(hovered) : null;
+
   return (
-    <section id="work" ref={sectionRef} className="relative overflow-hidden bg-(--scene-wall)">
-      {/* Desktop: a 3D room of doors. Hover one to fade the rest and read its details. */}
-      <div className="relative hidden h-screen min-h-[680px] md:block" onMouseLeave={() => !busy.current && setHovered(null)}>
-        <DoorRoom hovered={hovered} setHovered={setHovered} openKey={openKey} flight={flight} onSelect={key => enter(key)} onReady={onReady} />
-        <div aria-hidden="true" className="scene-vignette pointer-events-none absolute inset-0" />
-        <div className="pointer-events-none absolute inset-x-0 top-[clamp(80px,11vh,120px)] flex flex-col items-center gap-3 px-6 text-center">
-          <Eyebrow onDark>02 — What I do</Eyebrow>
-          <h2 className="m-0 text-[clamp(40px,5vw,72px)] leading-[1.03] tracking-[-0.015em] text-balance text-on-dark">
-            Magic happens <span className="serif-accent text-[#E35A52]">behind the doors</span>
-          </h2>
-        </div>
-        {/* Keyboard access to the 3D doors */}
-        <div className="sr-only">
-          {ROOMS.map((room, i) => (
-            <button key={room.key} type="button" onFocus={() => setHovered(i)} onBlur={() => setHovered(null)} onClick={() => enter(room.key)}>
-              Enter {room.title}
-            </button>
-          ))}
+    <section id="work" ref={sectionRef} className="relative overflow-hidden bg-[#140D0E]">
+      {/* Desktop: four doors of light in the dunes. Hover one to light it up and read what's behind it. */}
+      <div className="relative hidden h-screen min-h-[680px] md:block">
+        <div ref={deskRef} className="absolute inset-0 will-change-transform">
+          <GlowDoors
+            spots={DESKTOP_SPOTS}
+            hovered={hovered}
+            openKey={openKey}
+            onHover={k => !busy.current && setHovered(k)}
+            onEnter={enterDesktop}
+            className="absolute inset-0 size-full"
+          />
+          <div className="pointer-events-none absolute inset-x-0 top-[clamp(80px,11vh,120px)] flex flex-col items-center gap-3 px-6 text-center">
+            <Eyebrow onDark>02 — What I do</Eyebrow>
+            <h2 className="m-0 text-[clamp(40px,5vw,72px)] leading-[1.03] tracking-[-0.015em] text-balance text-on-dark">
+              Magic happens <span className="serif-accent text-[#E35A52]">behind the doors</span>
+            </h2>
+          </div>
+
+          {/* what's behind the door you're looking at */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] flex justify-center px-6">
+            <div className="relative h-[92px] w-full max-w-[760px] text-center">
+              <p className={`micro-caps absolute inset-x-0 top-1/2 m-0 -translate-y-1/2 text-muted-on-dark transition-opacity duration-500 ${shown ? 'opacity-0' : 'opacity-100'}`}>
+                Hover a door to look inside · click to step through
+              </p>
+              {ROOMS.map(r => (
+                <div
+                  key={r.key}
+                  aria-hidden={hovered !== r.key}
+                  className={`absolute inset-0 flex flex-col items-center justify-center gap-2 transition-[opacity,translate] duration-600 ease-[cubic-bezier(0.22,0.9,0.3,1)] ${hovered === r.key ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
+                >
+                  <h3 className="m-0 text-[clamp(26px,2.4vw,34px)] leading-none font-normal text-on-dark">{r.title}</h3>
+                  <p className="micro-caps m-0" style={{ color: DOOR_GLOW[r.key] }}>
+                    {r.motto}
+                  </p>
+                  <p className="label-caps m-0 text-icon-on-dark">Enter →</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Phones: doors stacked, details beside each */}
-      <div data-scene className="scene-wall px-4 pt-24 pb-16 md:hidden">
+      {/* Phones: each door in its own small scene, details beside it */}
+      <div ref={phoneRef} className="px-4 pt-24 pb-16 md:hidden">
         <div className="flex flex-col items-center gap-3 text-center">
           <Eyebrow onDark>02 — What I do</Eyebrow>
           <h2 className="m-0 text-[44px] leading-[48px] tracking-[-0.015em] text-balance text-on-dark">
             Magic happens <span className="serif-accent text-[#E35A52]">behind the doors</span>
           </h2>
         </div>
-        <div className="mt-12 flex flex-col gap-12">
-          {ROOMS.map(room => (
-            <div key={room.key} className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-6">
-              <FlatDoor room={room} open={openKey === room.key} onEnter={enter} />
-              <DoorDetails room={room} visible />
+        <div className="mt-12 flex flex-col gap-10">
+          {ROOMS.map((r, i) => (
+            <div key={r.key} className="grid grid-cols-[136px_minmax(0,1fr)] items-center gap-6">
+              <button
+                type="button"
+                aria-label={`Enter ${r.title}`}
+                onClick={e => enter(r.key, phoneRef.current, e.currentTarget.querySelector('[data-core]'))}
+                className="relative block h-[200px] w-full cursor-pointer overflow-hidden rounded-2xl border border-line-on-dark bg-transparent p-0"
+              >
+                <GlowDoors spots={PHONE_SPOTS[r.key]} openKey={openKey === r.key ? r.key : null} scale={2.1} labels={false} interactive={false} phase={20 + i * 23} className="absolute inset-0 size-full" />
+              </button>
+              <DoorDetails room={r} visible />
             </div>
           ))}
         </div>
@@ -153,31 +191,5 @@ export default function Doors() {
 
       <div ref={blackRef} aria-hidden="true" className="pointer-events-none fixed inset-0 z-60 bg-black opacity-0" />
     </section>
-  );
-}
-
-/** 2D door used on phones. */
-function FlatDoor({ room, open, onEnter }: { room: Room; open: boolean; onEnter: (key: SkillKey, recess: HTMLElement | null) => void }) {
-  return (
-    <button
-      type="button"
-      aria-label={`Enter ${room.title}`}
-      onClick={e => onEnter(room.key, e.currentTarget.querySelector('[data-recess]'))}
-      className="relative w-full cursor-pointer border-0 bg-transparent p-0"
-      style={{ '--door': room.color } as CSSProperties}
-    >
-      <span data-recess={room.key} className="door-recess gothic-arch relative block aspect-1/2 w-full perspective-distant">
-        <span className={`door-leaf gothic-arch absolute inset-0 origin-left transition-transform duration-900 ease-[cubic-bezier(0.6,0.05,0.25,1)] ${open ? 'rotate-y-78' : ''}`}>
-          <span className="door-plate absolute top-[34%] left-1/2 w-[52%] -translate-x-1/2 px-1 py-[3%] text-center font-mono text-[7px] leading-[1.15] font-bold tracking-[0.08em] uppercase">
-            {room.plate}
-          </span>
-          {/* eslint-disable-next-line @next/next/no-img-element -- small SVG icon */}
-          <img src={`/icons/icon-${room.key}-night.svg`} alt="" className="absolute top-[18%] left-1/2 w-[26%] -translate-x-1/2" />
-          <span className="door-gold absolute top-[55.5%] right-[13%] h-[2.4%] w-[24%] rounded-full" />
-          <span className="door-gold absolute top-[54.4%] right-[10%] aspect-square w-[8%] rounded-full" />
-          <span className="door-keyhole absolute top-[60%] right-[11.6%] aspect-1/2 w-[4.6%] rounded-xs" />
-        </span>
-      </span>
-    </button>
   );
 }

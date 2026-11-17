@@ -1,36 +1,11 @@
 'use client';
 
 import { useEffect, useId, useRef } from 'react';
+import { DUNE_LAYERS, dunePath, H, STARS, W } from '@/lib/dunes';
 
 // The Red Sun desert, drawn live so it can move: sky, stars, the sun (day) or crescent (night) in the
 // same spot, and five dune layers that drift slowly, far ones slower than near ones.
-const W = 1920; // one repeat of every dune; each path is drawn twice as wide and slides by W
-const H = 1080;
-
-/** A dune ridge as a sum of sines whose periods divide W, so sliding by W loops seamlessly. */
-function dune(base: number, waves: [amp: number, k: number, phase: number][]) {
-  let d = `M0 ${H}`;
-  for (let x = 0; x <= W * 2; x += 24) {
-    const y = waves.reduce((acc, [a, k, p]) => acc + a * Math.sin((2 * Math.PI * k * x) / W + p), base);
-    d += ` L${x} ${y.toFixed(1)}`;
-  }
-  return `${d} L${W * 2} ${H} Z`;
-}
-
-// far → near: [ridge height, waves, seconds per loop]
-const DUNES: [string, number][] = [
-  [dune(640, [[34, 1, 0.4], [16, 3, 1.7]]), 160],
-  [dune(705, [[42, 1, 2.2], [14, 2, 0.3], [8, 5, 1]]), 120],
-  [dune(780, [[48, 1, 4.1], [18, 3, 2.6]]), 90],
-  [dune(865, [[44, 2, 1.2], [20, 1, 5]]), 70],
-  [dune(960, [[52, 1, 3.3], [16, 4, 0.8]]), 54],
-];
-
-// Stars for the night sky (fixed, so the server and the browser draw the same ones)
-const STARS = Array.from({ length: 90 }, (_, i) => {
-  const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
-  return { x: r(1) * W, y: r(2) * 560, s: 0.6 + r(3) * 1.3, d: (r(4) * 6).toFixed(2) };
-});
+const DUNES: [string, number][] = DUNE_LAYERS.map(l => [dunePath(l), l.secs]);
 
 // Where the sun and the crescent sit (the same spot by day and by night)
 const SUN = { x: 1150, y: 585, r: 118 };

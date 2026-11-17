@@ -232,6 +232,7 @@ export type StoryEntry = {
 // Newest first. The big year counter rolls to each entry's year as it scrolls into view.
 export const STORY: StoryEntry[] = [
   {
+    section: 'Professional Experience',
     year: 2026,
     range: 'Jul 2026 — Present',
     date: 'Jul 2026 — Present',

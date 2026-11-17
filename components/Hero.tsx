@@ -15,7 +15,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative isolate -mt-16 grid min-h-[min(900px,100vh)] grid-cols-1 items-start gap-10 px-[clamp(24px,4vw,48px)] pt-32 pb-28 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16 md:pt-36"
+      className="relative isolate -mt-16 grid min-h-[clamp(860px,100vh,900px)] grid-cols-1 items-start gap-10 px-[clamp(24px,4vw,48px)] pt-32 pb-28 md:grid-cols-[minmax(0,1fr)_auto] md:gap-16 md:pt-36"
     >
       <DesertScene />
       <HeroFilm />

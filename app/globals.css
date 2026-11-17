@@ -187,7 +187,6 @@
   .desert-fade { background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, transparent) 0%, color-mix(in srgb, var(--bg) 70%, transparent) 55%, transparent 80%); -webkit-mask-image: none; mask-image: none; }
 }
 
-/* Doors room on phones: flat doors in the same pointed arch as the 3D ones */
 @layer components {
   /* The one italic phrase in a headline, in the red for words */
   .serif-accent { font-family: var(--font-display); font-style: italic; font-weight: 400; color: var(--link); }
@@ -205,27 +204,43 @@
   /* Spiral rings along the top of the notebook card */
   .notebook-rings { background: radial-gradient(ellipse 4px 10px at 50% 50%, transparent 0 2px, var(--line-strong) 2.5px 3.5px, transparent 4px) 0 0 / 26px 26px repeat-x; }
 
-  /* Doors room on phones */
-  .scene-wall { background: radial-gradient(ellipse 70% 60% at 50% 35%, color-mix(in srgb, var(--scene-wall) 85%, #e3cfae), var(--scene-wall) 70%); }
-  .door-recess { background: #0e0909; box-shadow: 0 0 0 10px var(--scene-casing), inset 0 12px 30px rgba(0, 0, 0, 0.8); }
-  .door-leaf {
-    background:
-      repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, rgba(255, 255, 255, 0.05) 2px 3px, transparent 3px 11px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 35%, rgba(0, 0, 0, 0.25)),
-      var(--door);
-    backface-visibility: hidden;
-  }
-  .door-plate { background: linear-gradient(135deg, #e3cfae, #9c7a58 55%, #e0cdaf); color: #33231a; }
-  .door-gold { background: linear-gradient(180deg, #f3ebe0, #c6a684 45%, #6b4c36); }
-  .door-keyhole {
-    background:
-      radial-gradient(circle at 50% 30%, #0e0909 0 22%, transparent 24%),
-      linear-gradient(#0e0909, #0e0909) 50% 72% / 22% 40% no-repeat,
-      linear-gradient(180deg, #f3ebe0, #c6a684 45%, #6b4c36);
-  }
-  .scene-vignette { background: radial-gradient(ellipse 75% 70% at 50% 48%, transparent 55%, color-mix(in srgb, #000 var(--vignette), transparent) 100%); }
 }
-.gothic-arch { clip-path: polygon(0 100%, 0 46%, 2% 37%, 6% 28%, 12% 19%, 20% 11%, 29% 5%, 39% 1.5%, 50% 0, 61% 1.5%, 71% 5%, 80% 11%, 88% 19%, 94% 28%, 98% 37%, 100% 46%, 100% 100%); }
+
+/* ---------- Glowing doors in the dunes (components/GlowDoors.tsx) ----------
+   Resting: a soft glow that breathes. Hover: it brightens and the door rises a touch, the others dim.
+   Opening: the doorway whites out. All eased, nothing snaps. */
+.glow-doors .star { animation: twinkle 4s ease-in-out infinite alternate; }
+.gdoor { cursor: pointer; outline: none; transition: opacity 0.8s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-dim='true'] { opacity: 0.42; }
+.gdoor-body { transform-box: fill-box; transition: transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-body { transform: scale(1.045); }
+.gdoor-soft { animation: gdoor-breathe 5.5s ease-in-out infinite alternate; }
+@keyframes gdoor-breathe { from { opacity: 0.8; } to { opacity: 1; } }
+.gdoor-bright { opacity: 0; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-bright { opacity: 1; }
+.gdoor-pool { opacity: 0.45; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-pool { opacity: 0.85; }
+.gdoor-icon { opacity: 0; transform: translateY(10px); transition: opacity 0.7s cubic-bezier(0.22, 0.9, 0.3, 1), transform 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor[data-hover='true'] .gdoor-icon { opacity: 0.9; transform: none; }
+.gdoor-flare { opacity: 0; transition: opacity 0.7s ease; }
+.gdoor[data-open='true'] .gdoor-flare { opacity: 1; }
+.gdoor-label {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  fill: #f3ebe0;
+  opacity: 0.5;
+  transition: opacity 0.7s ease;
+}
+.gdoor[data-hover='true'] .gdoor-label { opacity: 1; }
+.gdoor-paths { mix-blend-mode: screen; pointer-events: none; }
+.gdoor-path { opacity: 0.22; transition: opacity 0.9s cubic-bezier(0.22, 0.9, 0.3, 1); }
+.gdoor-path[data-hover='true'] { opacity: 0.5; }
+.gdoor-path[data-dim='true'] { opacity: 0.1; }
+@media (prefers-reduced-motion: reduce) {
+  .gdoor-soft, .glow-doors .star { animation: none; }
+}
 
 /* The intro has already played: never show it, not even for a frame. */
 [data-intro='seen'] .brand-intro { display: none; }
@@ -253,26 +268,6 @@ html.lenis, html.lenis body { height: auto; }
   60% { transform: translate(-3%, 8%); }
   80% { transform: translate(7%, 3%); }
   100% { transform: translate(-4%, -5%); }
-}
-
-/* The cursor ring (components/CursorTrail.tsx): a thin circle easing after the pointer */
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 68;
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--fg) 45%, transparent);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
-  will-change: transform;
-}
-.cursor-ring[data-hover='true'] {
-  border-color: color-mix(in srgb, var(--link) 70%, transparent);
-  background: color-mix(in srgb, var(--link) 8%, transparent);
 }
 
 /* Endless ticker */

@@ -128,7 +128,7 @@ function Strip({ onReady, still }: { onReady: () => void; still: boolean }) {
 
   return (
     <group ref={group}>
-      <mesh geometry={geometry} rotation-z={0.1} position={[0.4, -2.55, -0.5]}>
+      <mesh geometry={geometry} rotation-z={0.15} position={[0.4, -2.35, -0.5]} scale={0.8}>
         {/* Unlit: no lighting maths per pixel, which keeps the hero smooth */}
         <meshBasicMaterial map={texture} side={THREE.DoubleSide} />
       </mesh>
