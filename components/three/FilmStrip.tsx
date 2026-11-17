@@ -1,7 +1,7 @@
 'use client';
 
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useOnScreen } from './useThemeColors';
 
@@ -9,22 +9,20 @@ import { useOnScreen } from './useThemeColors';
 // These stock frames are only a fallback if none come through.
 const FALLBACK = ['/assets/city.jpg', '/assets/silk.jpg', '/assets/flare.jpg', '/assets/dune.jpg', '/assets/sea.jpg', '/assets/mono.jpg', '/assets/forest.jpg', '/assets/portrait.jpg'];
 
-const TEX_W = 4096;
-const TEX_H = 512;
-const FRAME_COUNT = 8;
-const PITCH = TEX_W / FRAME_COUNT; // one frame per 512px
+// Each frame is drawn 512px square on the film texture, and is 2.25 world units long on the ribbon.
+// The texture holds every photo once; with many photos the frames are drawn a little smaller so the
+// texture stays within what the graphics card allows (about 32 photos at full size on most screens).
+const FRAME_PX = 512;
+const FRAME_WORLD = 2.25;
+const MIN_FRAMES = 4; // a few photos are repeated so the pattern isn't too short
 const HOLES_PER_FRAME = 12; // sprocket holes divide each frame exactly, so the loop has no seam
-const STRIP_W = 18; // world units; the texture repeats once across this width
-const STRIP_H = STRIP_W * (TEX_H / TEX_W);
-// The ribbon itself is much longer than the film pattern (which repeats along it), so neither end
-// ever comes into view, however the strip leans towards the mouse.
-const REPEATS = 3;
-const RIBBON_W = STRIP_W * REPEATS;
+const STRIP_H = FRAME_WORLD;
+// The ribbon is much longer than the screen, so neither end ever comes into view, however it leans.
+const RIBBON_W = 54;
 
 // One speed for everything: the film rolls left and its waves travel left at the same pace,
 // so the strip moves as one ribbon instead of sliding over its own ripples.
-const ROLL = 0.018; // texture widths per second
-const SPEED = ROLL * STRIP_W; // world units per second
+const SPEED = 0.324; // world units per second
 
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>(resolve => {
@@ -36,35 +34,45 @@ const loadImage = (src: string) =>
   });
 
 /** Draws the whole strip once every photo has loaded, so nothing pops in. */
-function useFilmTexture(frames: string[], onReady: () => void) {
+function useFilmTexture(frames: string[], maxTex: number, onReady: () => void) {
+  // every chosen photo once (at least a few frames), else the stock frames
+  const list = useMemo(
+    () => (frames.length ? Array.from({ length: Math.max(MIN_FRAMES, frames.length) }, (_, i) => frames[i % frames.length]) : FALLBACK),
+    [frames],
+  );
+  const n = list.length;
+  const px = Math.max(160, Math.min(FRAME_PX, Math.floor(Math.min(maxTex, 16384) / n))); // pixels per frame
+
   const { canvas, texture } = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = TEX_W;
-    canvas.height = TEX_H;
+    canvas.width = px * n;
+    canvas.height = px;
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
-    texture.repeat.x = REPEATS;
+    texture.repeat.x = RIBBON_W / (n * FRAME_WORLD); // the photos repeat along the ribbon
     texture.anisotropy = 8;
     return { canvas, texture };
-  }, []);
+  }, [n, px]);
+  useEffect(() => () => texture.dispose(), [texture]);
 
   useEffect(() => {
     let cancelled = false;
-    // always eight frames: repeat the photos if there are fewer
-    const list = frames.length ? Array.from({ length: FRAME_COUNT }, (_, i) => frames[i % frames.length]) : FALLBACK;
     Promise.all(list.map(loadImage)).then(images => {
       if (cancelled) return;
       const g = canvas.getContext('2d')!;
+      g.setTransform(px / FRAME_PX, 0, 0, px / FRAME_PX, 0, 0); // draw in 512px frames, whatever the size
+      const W = FRAME_PX * n;
+      const H = FRAME_PX;
       const band = 78;
       // film base (night) with cream sprocket holes, evenly spaced across every frame
       g.fillStyle = '#140D0E';
-      g.fillRect(0, 0, TEX_W, TEX_H);
+      g.fillRect(0, 0, W, H);
       g.fillStyle = '#F3EBE0';
-      const step = PITCH / HOLES_PER_FRAME;
-      for (let i = 0; i < FRAME_COUNT * HOLES_PER_FRAME; i++) {
+      const step = FRAME_PX / HOLES_PER_FRAME;
+      for (let i = 0; i < n * HOLES_PER_FRAME; i++) {
         const x = i * step + (step - 24) / 2;
-        for (const y of [24, TEX_H - 52]) {
+        for (const y of [24, H - 52]) {
           g.beginPath();
           g.roundRect(x, y, 24, 28, 5);
           g.fill();
@@ -74,13 +82,13 @@ function useFilmTexture(frames: string[], onReady: () => void) {
       g.fillStyle = '#E3CFAE';
       g.font = '400 20px "Space Mono", ui-monospace, Consolas, monospace';
       images.forEach((img, i) => {
-        g.fillText(`${12 + i}`, i * PITCH + 18, band - 8);
-        g.fillText(`${12 + i}A  ▸`, i * PITCH + PITCH / 2, TEX_H - band + 26);
+        g.fillText(`${12 + i}`, i * FRAME_PX + 18, band - 8);
+        g.fillText(`${12 + i}A  ▸`, i * FRAME_PX + FRAME_PX / 2, H - band + 26);
         if (!img.width) return;
         // cover-fit each photo into its frame
-        const fx = i * PITCH + 14;
-        const fw = PITCH - 28;
-        const fh = TEX_H - band * 2;
+        const fx = i * FRAME_PX + 14;
+        const fw = FRAME_PX - 28;
+        const fh = H - band * 2;
         const scale = Math.max(fw / img.width, fh / img.height);
         const sw = fw / scale;
         const sh = fh / scale;
@@ -97,15 +105,16 @@ function useFilmTexture(frames: string[], onReady: () => void) {
     return () => {
       cancelled = true;
     };
-  }, [canvas, texture, onReady, frames]);
+  }, [canvas, texture, onReady, list, n, px]);
 
-  return texture;
+  return { texture, period: n * FRAME_WORLD };
 }
 
 function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => void; still: boolean }) {
   const group = useRef<THREE.Group>(null);
-  const texture = useFilmTexture(frames, onReady);
-  const geometry = useMemo(() => new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 120 * REPEATS, 1), []);
+  const maxTex = useThree(s => s.gl.capabilities.maxTextureSize);
+  const { texture, period } = useFilmTexture(frames, maxTex, onReady);
+  const geometry = useMemo(() => new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 360, 1), []);
   const base = useMemo(() => Float32Array.from(geometry.attributes.position.array), [geometry]);
   const time = useRef(0);
 
@@ -113,7 +122,7 @@ function Strip({ frames, onReady, still }: { frames: string[]; onReady: () => vo
     const dt = Math.min(delta, 1 / 20); // after a pause, never jump
     if (!still) time.current += dt;
     const t = time.current;
-    texture.offset.x = (t * ROLL) % 1;
+    texture.offset.x = ((t * SPEED) / period) % 1; // the film rolls at SPEED, however long it is
 
     // Every bend travels left at the roll speed: phase = k·(x + SPEED·t).
     const pos = geometry.attributes.position as THREE.BufferAttribute;

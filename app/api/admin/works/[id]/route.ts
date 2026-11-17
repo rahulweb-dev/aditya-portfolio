@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const body = (await req.json().catch(() => ({}))) as Meta;
   const patch: Meta = {};
   if (typeof body.title === 'string') patch.title = body.title.slice(0, 200);
-  for (const k of ['order', 'w', 'h', 'secs', 'film'] as const) if (typeof body[k] === 'number' && Number.isFinite(body[k])) patch[k] = body[k];
+  for (const k of ['order', 'w', 'h', 'secs', 'film', 'thumb'] as const) if (typeof body[k] === 'number' && Number.isFinite(body[k])) patch[k] = body[k];
   try {
     await updateWork(id, patch);
   } catch (e) {

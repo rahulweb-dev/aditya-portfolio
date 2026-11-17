@@ -2,12 +2,12 @@
 
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { withTr } from '@/lib/ik';
 
 export type WorkItem = { id?: string; src: string; w: number; h: number; title: string | null; poster?: string; secs?: number };
 
 /** ImageKit resizes on the fly: ask for the width the layout needs. */
-export const ikLoader = ({ src, width, quality }: { src: string; width: number; quality?: number }) =>
-  `${src}${src.includes('?') ? '&' : '?'}tr=w-${width},q-${quality ?? 75}`;
+export const ikLoader = ({ src, width, quality }: { src: string; width: number; quality?: number }) => withTr(src, `w-${width},q-${quality ?? 75}`);
 const full = (src: string) => ikLoader({ src, width: 2000, quality: 85 });
 
 type Lenis = { stop: () => void; start: () => void };

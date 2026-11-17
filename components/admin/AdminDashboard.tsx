@@ -4,17 +4,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react';
 import Logo from '@/components/Logo';
+import { videoPoster, withTr } from '@/lib/ik';
 import ContentEditor, { type EditorView } from './ContentEditor';
 import type { SkillKey } from '@/lib/content';
 
-type Work = { id: string; name: string; src: string; w: number; h: number; title: string | null; order: number; poster?: string; secs?: number; film?: boolean };
+type Work = { id: string; name: string; src: string; w: number; h: number; title: string | null; order: number; poster?: string; secs?: number; film?: boolean; thumb?: number };
 type Craft = { key: SkillKey; name: string };
 type Upload = { id: string; name: string; progress: number; status: 'waiting' | 'uploading' | 'done' | 'error'; error?: string };
 
 const UNTITLED: Record<SkillKey, string> = { design: 'Design', photo: 'Frame', video: 'Reel', ai: 'AI film' };
 const pad = (n: number) => String(n).padStart(2, '0');
 const clock = (s = 0) => `${Math.floor(s / 60)}:${pad(s % 60)}`;
-const thumb = (w: Work) => `${w.poster ?? w.src}?tr=w-480,q-70`;
+const thumb = (w: Work) => withTr(w.poster ?? w.src, 'w-480,q-70');
 const cleanName = (name: string) => {
   const dot = name.lastIndexOf('.');
   const ext = dot > 0 ? name.slice(dot).toLowerCase() : '';
@@ -156,7 +157,7 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
           h: meta.h || res.height || 1500,
           title: null,
           order: startOrder + i + 1,
-          ...(video ? { poster: `${res.url}/ik-thumbnail.jpg`, secs: meta.secs ?? 0 } : {}),
+          ...(video ? { poster: videoPoster(res.url, meta.secs ?? 0), secs: meta.secs ?? 0 } : {}),
         };
         setWorks(prev => ({ ...prev, [target]: [...(prev[target] ?? []), added] }));
       } catch (e) {
@@ -207,15 +208,30 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
     saveOrder(next);
   }
 
-  /** Photographs: show on (or take off) the film strip in the hero. Up to eight. */
+  /** Photographs: show on (or take off) the film strip in the hero. As many as you like. */
   async function toggleFilm(w: Work) {
     const on = !w.film;
-    if (on && list.filter(x => x.film).length >= 8) return say('The film strip holds eight photos. Take one off first.', true);
     setWorks(prev => ({ ...prev, [craft]: (prev[craft] ?? []).map(x => (x.id === w.id ? { ...x, film: on } : x)) }));
     try {
       await api(`/api/admin/works/${w.id}`, { method: 'PATCH', body: JSON.stringify({ film: on ? 1 : 0 }) });
       refreshSite();
       say(on ? 'Added to the film strip.' : 'Taken off the film strip.');
+    } catch (e) {
+      say((e as Error).message, true);
+      load(craft);
+    }
+  }
+
+  /** Videos: take the poster from a different moment (seconds in). Empty goes back to 40% of the way. */
+  async function setPosterAt(w: Work, value: string) {
+    const at = value.trim() === '' ? 0 : Math.max(0, Math.min(Math.floor(w.secs ?? 0), Math.round(Number(value))));
+    if (!Number.isFinite(at) || at === (w.thumb ?? 0)) return;
+    const poster = videoPoster(w.src, w.secs ?? 0, at || undefined);
+    setWorks(prev => ({ ...prev, [craft]: (prev[craft] ?? []).map(x => (x.id === w.id ? { ...x, thumb: at || undefined, poster } : x)) }));
+    try {
+      await api(`/api/admin/works/${w.id}`, { method: 'PATCH', body: JSON.stringify({ thumb: at }) });
+      refreshSite();
+      say('Poster updated.');
     } catch (e) {
       say((e as Error).message, true);
       load(craft);
@@ -373,7 +389,7 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
         {/* the pieces */}
         <div className="mt-10 flex items-end justify-between gap-4">
           <p className="micro-caps m-0 text-soft">
-            {loading && !list.length ? 'Loading…' : `${list.length} pieces · drag to reorder · titles save when you press Enter or click away${craft === 'photo' ? ` · ★ ${list.filter(w => w.film).length}/8 on the hero's film strip` : ''}`}
+            {loading && !list.length ? 'Loading…' : `${list.length} pieces · drag to reorder · titles save when you press Enter or click away${craft === 'photo' ? ` · ★ ${list.filter(w => w.film).length} on the hero's film strip (in this order)` : ''}`}
           </p>
         </div>
         <ul className="mt-4 grid list-none grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] sm:gap-4 p-0">
@@ -418,6 +434,22 @@ export default function AdminDashboard({ user, ready, crafts }: { user: string; 
                   onKeyDown={e => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
                   className="w-full rounded-md border border-line bg-bg px-2.5 py-2 text-[13px] text-fg outline-none focus:border-rec"
                 />
+                {w.poster && (
+                  <label className="micro-caps flex items-center gap-2 text-soft">
+                    Poster at
+                    <input
+                      type="number"
+                      min={0}
+                      max={Math.floor(w.secs ?? 0)}
+                      defaultValue={w.thumb ?? ''}
+                      placeholder={String(Math.round((w.secs ?? 0) * 0.4))}
+                      onBlur={e => setPosterAt(w, e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+                      className="w-16 rounded-md border border-line bg-bg px-2 py-1 text-[13px] text-fg outline-none focus:border-rec"
+                    />
+                    s of {clock(w.secs)}
+                  </label>
+                )}
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex gap-1">
                     <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} aria-label="Move earlier" className="grid size-8 cursor-pointer place-items-center rounded-md border border-line bg-transparent text-fg hover:bg-bg-2 disabled:opacity-30">

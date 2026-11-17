@@ -9,14 +9,14 @@ import { listWorks } from '@/lib/cms/imagekit';
 
 /**
  * Photographs for the film strip: the ones marked "Film strip" in the Content studio (in gallery order),
- * or if none are marked, eight spread through the gallery. Each is cropped to a frame around its subject.
+ * as many as are marked; if none are, eight spread through the gallery. Each is cropped to a frame around its subject.
  */
 async function filmFrames() {
   const photos = await listWorks('photo');
   if (!photos.length) return [];
   const marked = photos.filter(p => p.film);
   const n = Math.min(8, photos.length);
-  return (marked.length ? marked.slice(0, 8) : Array.from({ length: n }, (_, i) => photos[Math.floor((i * photos.length) / n)])).map(p => `${p.src}${p.src.includes('?') ? '&' : '?'}tr=w-720,h-540,fo-auto`);
+  return (marked.length ? marked : Array.from({ length: n }, (_, i) => photos[Math.floor((i * photos.length) / n)])).map(p => `${p.src}${p.src.includes('?') ? '&' : '?'}tr=w-720,h-540,fo-auto`);
 }
 
 /**
