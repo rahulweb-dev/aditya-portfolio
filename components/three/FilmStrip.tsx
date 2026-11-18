@@ -37,6 +37,41 @@ const loadImage = (src: string) =>
     img.src = src;
   });
 
+/** A film's place on the strip: its frame's picture area on the texture, and the video that fills it. */
+type Slot = { video: HTMLVideoElement; canvas: HTMLCanvasElement; tex: THREE.CanvasTexture; x: number; y: number; w: number; h: number; secs: number };
+
+/** Draws a video's current picture into its slot: cover-fit, rounded corners, its running time. */
+function paintSlot(s: Slot) {
+  const g = s.canvas.getContext('2d')!;
+  const v = s.video;
+  g.fillStyle = '#140D0E';
+  g.fillRect(0, 0, s.w, s.h);
+  g.save();
+  g.beginPath();
+  g.roundRect(0, 0, s.w, s.h, Math.max(4, s.w * 0.021));
+  g.clip();
+  const scale = Math.max(s.w / v.videoWidth, s.h / v.videoHeight);
+  const sw = s.w / scale;
+  const sh = s.h / scale;
+  g.drawImage(v, (v.videoWidth - sw) / 2, (v.videoHeight - sh) / 2, sw, sh, 0, 0, s.w, s.h);
+  g.restore();
+  // the running time with a REC dot, small in the corner
+  const k = s.w / 484;
+  const label = `${Math.floor(s.secs / 60)}:${String(Math.round(s.secs) % 60).padStart(2, '0')}`;
+  g.font = `700 ${Math.round(22 * k)}px "Space Mono", ui-monospace, Consolas, monospace`;
+  const tw = g.measureText(label).width;
+  g.fillStyle = 'rgba(20, 13, 14, 0.72)';
+  g.beginPath();
+  g.roundRect(14 * k, 14 * k, tw + 48 * k, 36 * k, 18 * k);
+  g.fill();
+  g.fillStyle = '#FF5A48';
+  g.beginPath();
+  g.arc(34 * k, 32 * k, 6 * k, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#F3EBE0';
+  g.fillText(label, 46 * k, 40 * k);
+}
+
 /** Draws the whole strip once every photo has loaded, so nothing pops in. */
 function useFilmTexture(frames: FilmFrame[], maxTex: number, onReady: () => void) {
   // every chosen photo once (at least a few frames), else the stock frames
@@ -59,6 +94,7 @@ function useFilmTexture(frames: FilmFrame[], maxTex: number, onReady: () => void
     return { canvas, texture };
   }, [n, px]);
   useEffect(() => () => texture.dispose(), [texture]);
+  const slots = useRef<Slot[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,19 +175,55 @@ function useFilmTexture(frames: FilmFrame[], maxTex: number, onReady: () => void
         }
       });
       texture.needsUpdate = true;
+      // films play on the strip: each gets a muted, looping video that paints its own frame area
+      const k = px / FRAME_PX;
+      slots.current = list.flatMap((fr, i) => {
+        if (fr.secs === undefined || !fr.item?.src) return [];
+        const video = document.createElement('video');
+        video.crossOrigin = 'anonymous'; // ImageKit allows it; the strip can then copy its pictures
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.src = fr.item.src;
+        const w = Math.round((FRAME_PX - 28) * k);
+        const h = Math.round((FRAME_PX - band * 2) * k);
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        return [{ video, canvas: c, tex: new THREE.CanvasTexture(c), x: Math.round((i * FRAME_PX + 14) * k), y: Math.round(band * k), w, h, secs: fr.secs }];
+      });
       onReady();
     });
     return () => {
       cancelled = true;
+      slots.current.forEach(sl => {
+        sl.video.pause();
+        sl.video.removeAttribute('src');
+        sl.video.load();
+        sl.tex.dispose();
+      });
+      slots.current = [];
     };
   }, [canvas, texture, onReady, list, n, px]);
 
-  return { texture, period: n * FRAME_WORLD, n };
+  return { texture, period: n * FRAME_WORLD, n, slots, height: px };
 }
 
-function Strip({ frames, onReady, still, onOpen }: { frames: FilmFrame[]; onReady: () => void; still: boolean; onOpen?: (index: number, at: { x: number; y: number }) => void }) {
-  const maxTex = useThree(s => s.gl.capabilities.maxTextureSize);
-  const { texture, period, n } = useFilmTexture(frames, maxTex, onReady);
+function Strip({ frames, onReady, still, active, area, onOpen }: { frames: FilmFrame[]; onReady: () => void; still: boolean; active: boolean; area: React.RefObject<HTMLDivElement | null>; onOpen?: (index: number, at: { x: number; y: number }) => void }) {
+  const gl = useThree(s => s.gl);
+  const maxTex = gl.capabilities.maxTextureSize;
+  const { texture, period, n, slots, height } = useFilmTexture(frames, maxTex, onReady);
+  const sinceVideo = useRef(0);
+  const at = useMemo(() => new THREE.Vector2(), []);
+
+  // the films play while the strip is on screen, and rest when it isn't
+  useEffect(() => {
+    const go = () => slots.current.forEach(sl => (active && !still ? sl.video.play().catch(() => {}) : sl.video.pause()));
+    go();
+    const t = setTimeout(go, 1500); // the films may be set up a moment after the strip
+    return () => clearTimeout(t);
+  }, [active, still, slots, frames]);
   const geometry = useMemo(() => {
     const g = new THREE.PlaneGeometry(RIBBON_W, STRIP_H, 360, 1);
     // the ribbon bends as it rolls: a roomier bounding sphere so clicks are never missed
@@ -181,6 +253,18 @@ function Strip({ frames, onReady, still, onOpen }: { frames: FilmFrame[]; onRead
     }
     pos.needsUpdate = true;
 
+    // ~15 times a second, copy each playing film's picture into its frame on the film (only that small
+    // area is sent to the graphics card, so the strip stays smooth)
+    sinceVideo.current += dt;
+    if (sinceVideo.current >= 1 / 15 && slots.current.length) {
+      sinceVideo.current = 0;
+      for (const sl of slots.current) {
+        if (sl.video.readyState < 2 || sl.video.paused) continue;
+        paintSlot(sl);
+        at.set(sl.x, height - sl.y - sl.h); // the film's rows run bottom-up on the card
+        gl.copyTextureToTexture(sl.tex, texture, null, at);
+      }
+    }
   });
 
   return (
@@ -190,6 +274,10 @@ function Strip({ frames, onReady, still, onOpen }: { frames: FilmFrame[]; onRead
           // a click that landed on a button, link or the portrait belongs to them, not the film
           const target = e.nativeEvent.target as Element | null;
           if (!onOpen || !frames.length || target?.closest('a, button, [role="button"], [role="switch"], figure, input, label, header, nav')) return;
+          // only the part of the film you can see: the ribbon runs on well past the screen's edges
+          const r = area.current?.getBoundingClientRect();
+          const { clientX: cx, clientY: cy } = e.nativeEvent;
+          if (!r || cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) return;
           if (!e.uv) return;
           e.stopPropagation();
           // which frame: where on the film this point is, given how far it has rolled
@@ -197,7 +285,14 @@ function Strip({ frames, onReady, still, onOpen }: { frames: FilmFrame[]; onRead
           const frame = Math.floor(u * n) % frames.length;
           onOpen(frame, { x: e.nativeEvent.clientX, y: e.nativeEvent.clientY });
         }}
-        onPointerOver={() => onOpen && (document.body.style.cursor = 'pointer')}
+        onPointerMove={e => {
+          // a pointer only over the visible film, never over buttons or the portrait
+          const target = e.nativeEvent.target as Element | null;
+          const r = area.current?.getBoundingClientRect();
+          const { clientX: cx, clientY: cy } = e.nativeEvent;
+          const inside = !!r && cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+          document.body.style.cursor = onOpen && inside && !target?.closest('a, button, figure, header, nav, input, label') ? 'pointer' : '';
+        }}
         onPointerOut={() => (document.body.style.cursor = '')}
         geometry={geometry} rotation-z={0.15} position={[0.4, -2.35, -0.5]} scale={0.8}>
         {/* Unlit: no lighting maths per pixel, which keeps the hero smooth */}
@@ -215,6 +310,9 @@ export default function FilmStrip({ frames = [], onOpen }: { frames?: FilmFrame[
   const [still, setStill] = useState(false);
   const markReady = useMemo(() => () => setReady(true), []);
   useEffect(() => setStill(window.matchMedia('(prefers-reduced-motion: reduce)').matches), []);
+  // it listens to the mouse only over the hero, not the whole page
+  const [source, setSource] = useState<HTMLElement | null>(null);
+  useEffect(() => setSource(wrap.current?.closest('section') ?? null), []);
 
   return (
     <div
@@ -222,17 +320,17 @@ export default function FilmStrip({ frames = [], onOpen }: { frames?: FilmFrame[
       aria-hidden="true"
       className={`pointer-events-none absolute inset-0 -z-[5] hidden transition-opacity duration-1000 md:block ${ready ? 'opacity-100' : 'opacity-0'}`}
     >
-      <Canvas
+      {source && <Canvas
         flat
         dpr={[1, 1.5]}
         frameloop={onScreen ? (still ? 'demand' : 'always') : 'never'}
         camera={{ fov: 40, position: [0, 0, 8] }}
         gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
-        eventSource={typeof document !== 'undefined' ? document.body : undefined}
+        eventSource={source}
         eventPrefix="client"
       >
-        <Strip frames={frames} onReady={markReady} still={still} onOpen={onOpen} />
-      </Canvas>
+        <Strip frames={frames} onReady={markReady} still={still} active={onScreen} area={wrap} onOpen={onOpen} />
+      </Canvas>}
     </div>
   );
 }
