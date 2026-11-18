@@ -216,6 +216,22 @@ function sub(a: BaseAudioContext, at: number, dur: number, from: number, to: num
   o.stop(at + dur + 1);
 }
 
+/** A cinematic boom: a deep thump that drops in pitch, felt more than heard, with a long tail. */
+function boom(a: BaseAudioContext, at: number, peak: number) {
+  const o = a.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(95, at);
+  o.frequency.exponentialRampToValueAtTime(34, at + 0.9);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0, at);
+  g.gain.linearRampToValueAtTime(peak, at + 0.02);
+  g.gain.setTargetAtTime(0, at + 0.05, 0.35);
+  o.connect(g);
+  send(a, g, 0.35);
+  o.start(at);
+  o.stop(at + 2.5);
+}
+
 // ---------- the sounds (each takes a context and a start time, so they can also be rendered) ----------
 
 export function hoverSound(a: BaseAudioContext, t: number, key: SkillKey) {
@@ -230,19 +246,29 @@ export function hoverSound(a: BaseAudioContext, t: number, key: SkillKey) {
 
 export function enterSound(a: BaseAudioContext, t: number, key: SkillKey) {
   const f = NOTE[key];
-  pad(a, f, t, 0.05, 0.25, 0.9, 0.045, 0.6); // the door answers
-  air(a, t + 0.1, 1.75, 250, 5500, 0.2, -0.6, 0.6, 'in', 0.45); // rushing in, sweeping past
-  air(a, t + 0.25, 1.6, 500, 7000, 0.07, 0.5, -0.5, 'in', 0.6); // a second, brighter layer the other way
-  sub(a, t + 0.15, 1.75, 70, 42, 0.16); // a deep swell underneath
-  // the light floods in: a wide, glowing chord
+  pad(a, f, t, 0.05, 0.25, 0.9, 0.05, 0.6); // the door answers
+  pad(a, f / 2, t + 0.05, 0.08, 0.2, 1.0, 0.04, 0.5); // with weight beneath it
+  // the rush: three layers of air sweeping past from both sides, building to the arrival
+  air(a, t + 0.1, 1.75, 200, 5500, 0.26, -0.7, 0.7, 'in', 0.45);
+  air(a, t + 0.25, 1.6, 450, 7500, 0.1, 0.6, -0.6, 'in', 0.6);
+  air(a, t + 0.6, 1.25, 120, 1600, 0.16, 0, 0, 'in', 0.3); // a dark roar at the centre
+  // the rumble: deep, rising in strength the whole way in
+  sub(a, t + 0.15, 1.75, 62, 38, 0.24);
+  // a rising tone, pulled up into the light
+  pad(a, f / 4, t + 0.4, 1.3, 0.05, 0.3, 0.035, 0.4, 0);
+  // the arrival: a soft but weighty boom and a burst of air as the light floods in
   const at = t + 1.85;
+  boom(a, at, 0.32);
+  air(a, at - 0.02, 1.6, 6000, 900, 0.12, -0.3, 0.3, 'out', 0.85);
+  // a wide, glowing chord that rings out
   [
-    [1, 0.04, -0.3],
-    [1.5, 0.028, 0.3],
-    [2, 0.022, -0.15],
-    [2.5, 0.014, 0.2],
-    [3, 0.01, 0],
-  ].forEach(([m, peak, pan], i) => pad(a, f * m, at + i * 0.015, 0.06, 0.4, 2.2, peak, 0.85, pan));
+    [1, 0.05, -0.35],
+    [1.5, 0.034, 0.35],
+    [2, 0.026, -0.2],
+    [2.5, 0.017, 0.25],
+    [3, 0.012, 0],
+    [4, 0.006, 0.1],
+  ].forEach(([m, peak, pan], i) => pad(a, f * m, at + i * 0.02, 0.05, 0.6, 3.0, peak, 0.9, pan));
 }
 
 export function backSound(a: BaseAudioContext, t: number, key: SkillKey) {
