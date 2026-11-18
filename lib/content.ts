@@ -31,8 +31,8 @@ export const BRAND = {
 
 // The italic word in 'I am a …', in the order of the crafts. 'an' before AI.
 export const ROLES = [
-  { article: 'a', word: 'graphic designer' },
   { article: 'a', word: 'photographer' },
+  { article: 'a', word: 'graphic designer' },
   { article: 'a', word: 'videographer' },
   { article: 'an', word: 'AI creator' },
 ];

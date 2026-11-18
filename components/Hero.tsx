@@ -57,7 +57,7 @@ export default async function Hero() {
         <Eyebrow>{SITE.fullName}</Eyebrow>
         <HeroRoles name={SITE.name} />
         <p className="m-0 max-w-[46ch] text-[17px] leading-[30px] text-soft">
-          Graphic designer, photographer, videographer and AI creator in {SITE.location}.
+          Photographer, graphic designer, videographer and AI creator in {SITE.location}.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <SolidButton href="#contact">Start a project</SolidButton>
