@@ -322,6 +322,21 @@ function Strip({ frames, onReady, still, active, area, onOpen }: { frames: FilmF
 export default function FilmStrip({ frames = [], onOpen }: { frames?: FilmFrame[]; onOpen?: (index: number, at: { x: number; y: number }) => void }) {
   const wrap = useRef<HTMLDivElement>(null);
   const onScreen = useOnScreen(wrap);
+  // build the strip (photos, films, the 3D scene) only once the hero has been on screen, so arriving
+  // further down the page (coming back to the doors) does no heavy work during that animation
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        setSeen(true);
+        io.disconnect();
+      }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const [ready, setReady] = useState(false);
   const [still, setStill] = useState(false);
   const markReady = useMemo(() => () => setReady(true), []);
@@ -336,7 +351,7 @@ export default function FilmStrip({ frames = [], onOpen }: { frames?: FilmFrame[
       aria-hidden="true"
       className={`pointer-events-none absolute inset-0 -z-[5] hidden transition-opacity duration-1000 md:block ${ready ? 'opacity-100' : 'opacity-0'}`}
     >
-      {source && <Canvas
+      {source && seen && <Canvas
         flat
         dpr={[1, 1.5]}
         frameloop={onScreen ? (still ? 'demand' : 'always') : 'never'}

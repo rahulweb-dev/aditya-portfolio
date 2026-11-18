@@ -71,7 +71,7 @@ const toUrl = (c: HTMLCanvasElement) =>
 const idle = () =>
   new Promise<void>(res => {
     const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-    if (ric) ric(() => res(), { timeout: 400 });
+    if (ric) ric(() => res(), { timeout: 2000 }); // when the page is idle (after any opening animation)
     else setTimeout(res, 30);
   });
 
@@ -106,6 +106,8 @@ type Props = {
   /** Seconds into the drift to start from, so scenes don't all look the same */
   phase?: number;
   className?: string;
+  /** Hold off painting the glows (while an animation plays, e.g. coming back to the doors) */
+  hold?: boolean;
 };
 
 /**
@@ -114,7 +116,7 @@ type Props = {
  * dunes more than far ones, for depth. The scene follows the site: dunes under a paper sky by day,
  * under stars by night. Hover lifts a door a little and its light blooms.
  */
-export default function GlowDoors({ spots, hovered = null, openKey = null, onHover, onEnter, scale = 1, labels = true, interactive = true, phase = 40, className = '' }: Props) {
+export default function GlowDoors({ spots, hovered = null, openKey = null, onHover, onEnter, scale = 1, labels = true, interactive = true, phase = 40, className = '', hold = false }: Props) {
   const u = useId().replace(/[^a-zA-Z0-9]/g, '');
   const svg = useRef<SVGSVGElement>(null);
   const doors = useRef<(SVGGElement | null)[]>([]);
@@ -139,8 +141,9 @@ export default function GlowDoors({ spots, hovered = null, openKey = null, onHov
     dunes: DUNE_LAYERS.map(l => `translate(${(-duneOffset(l, phase)).toFixed(2)} 0)`),
   }));
 
-  // Paint the glows once the browser is idle
+  // Paint the glows once the browser is idle (and not while an animation is playing)
   useEffect(() => {
+    if (hold) return;
     let alive = true;
     spots.forEach(s => {
       const [w, h] = SIZE[s.layer];
@@ -149,7 +152,7 @@ export default function GlowDoors({ spots, hovered = null, openKey = null, onHov
     return () => {
       alive = false;
     };
-  }, [spots]);
+  }, [spots, hold]);
 
   // One clock for the dunes and the doors, plus the mouse parallax
   useEffect(() => {

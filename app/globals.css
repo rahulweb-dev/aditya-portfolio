@@ -254,6 +254,9 @@
   .gdoor-soft, .glow-doors .star { animation: none; }
 }
 
+/* On the way back from a room: black from the moment you leave until the doors take over. */
+html[data-returning='true'] body::before { content: ''; position: fixed; inset: 0; z-index: 61; background: #000; pointer-events: none; }
+
 /* The intro has already played: never show it, not even for a frame. */
 [data-intro='seen'] .brand-intro { display: none; }
 

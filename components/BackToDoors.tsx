@@ -15,6 +15,12 @@ export default function BackToDoors({ skill }: { skill: SkillKey }) {
       sessionStorage.setItem('returnDoor', skill);
     } catch {}
     if (black.current) black.current.style.opacity = '1';
+    // keep the screen black through the change of page (the home page clears it once it has
+    // scrolled to the doors), so the top of the home page never flashes up in between
+    setTimeout(() => (document.documentElement.dataset.returning = 'true'), 300);
+    setTimeout(() => {
+      delete document.documentElement.dataset.returning; // in case the page never arrives
+    }, 4000);
     // The home page picks up 'returnDoor' and zooms back out of this doorway.
     setTimeout(() => router.push('/', { scroll: false }), 380);
   }

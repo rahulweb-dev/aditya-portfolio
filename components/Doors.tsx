@@ -69,6 +69,14 @@ export default function Doors() {
   const [hovered, setHovered] = useState<SkillKey | null>(null);
   const [openKey, setOpenKey] = useState<SkillKey | null>(null);
   const [tunnel, setTunnel] = useState<SkillKey | null>(null);
+  // coming back from a room: hold the heavy glow painting until the pull-back has finished
+  const [returning, setReturning] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && !!sessionStorage.getItem('returnDoor');
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     ROOMS.forEach(r => router.prefetch(`/work/${r.key}`));
@@ -81,13 +89,23 @@ export default function Doors() {
       key = sessionStorage.getItem('returnDoor');
       sessionStorage.removeItem('returnDoor');
     } catch {}
-    if (!key || !isSkill(key) || !sectionRef.current) return;
+    const clearCover = () => {
+      delete document.documentElement.dataset.returning;
+    };
+    if (!key || !isSkill(key) || !sectionRef.current) {
+      clearCover();
+      setReturning(false);
+      return;
+    }
     const skill = key;
 
     const top = sectionRef.current.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top, behavior: 'instant' });
     busy.current = true;
+    setReturning(true);
+    setTimeout(() => setReturning(false), 2400);
     fadeBlack(blackRef.current, true, '0s');
+    clearCover(); // our own black cover has taken over
 
     const scene = isDesktop() ? deskRef.current : null;
     const door = scene?.querySelector(`[data-door="${skill}"] [data-core]`);
@@ -149,6 +167,7 @@ export default function Doors() {
               if (k) playHover(k);
             }}
             onEnter={enterDesktop}
+            hold={returning}
             className="absolute inset-0 size-full"
           />
           <div className="pointer-events-none absolute inset-x-0 top-[clamp(80px,11vh,120px)] flex flex-col items-center gap-3 px-6 text-center">
@@ -203,7 +222,7 @@ export default function Doors() {
                 onClick={e => enter(r.key, phoneRef.current, e.currentTarget.querySelector('[data-core]'))}
                 className="relative block aspect-[136/200] w-full cursor-pointer overflow-hidden rounded-2xl border border-line bg-transparent p-0"
               >
-                <GlowDoors spots={PHONE_SPOTS[r.key]} openKey={openKey === r.key ? r.key : null} scale={2.1} labels={false} interactive={false} phase={20 + i * 23} className="absolute inset-0 size-full" />
+                <GlowDoors spots={PHONE_SPOTS[r.key]} openKey={openKey === r.key ? r.key : null} scale={2.1} labels={false} interactive={false} phase={20 + i * 23} hold={returning} className="absolute inset-0 size-full" />
               </button>
               <DoorDetails room={r} visible />
             </div>
