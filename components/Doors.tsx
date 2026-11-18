@@ -114,22 +114,52 @@ export default function Doors() {
       busy.current = false;
       return;
     }
-    // wait two frames so the doors are in place, then fly out
-    requestAnimationFrame(() =>
+    // Pull back out of the doorway: the screen starts filled with the door's light, which shrinks back
+    // into the doorway while the dunes appear around it at their normal size. Only a flat panel moves
+    // (no scaling of the scene), so it stays crisp and smooth on any machine.
+    setOpenKey(skill); // the doorway glows white and the dunes hold still while we pull back
+    // wait (in the dark) until the freshly opened page has finished setting itself up, so the
+    // pull-back never starts in the middle of that work
+    const whenSettled = (go: () => void) => {
+      const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+      if (ric) ric(go, { timeout: 900 });
+      else setTimeout(go, 250);
+    };
+    whenSettled(() =>
       requestAnimationFrame(() => {
-        setOpenKey(skill);
         playBack(skill);
-        zoomInto(scene, door, true, 0);
-        scene.getBoundingClientRect(); // apply the zoom before easing out of it
-        requestAnimationFrame(() => {
-          zoomInto(scene, door, false, 1.3);
-          fadeBlack(blackRef.current, false, '0.7s');
+        const r = door.getBoundingClientRect();
+        const glow = DOOR_GLOW[skill];
+        const panel = document.createElement('div');
+        panel.setAttribute('aria-hidden', 'true');
+        Object.assign(panel.style, {
+          position: 'fixed',
+          inset: '0',
+          zIndex: '61',
+          pointerEvents: 'none',
+          background: `radial-gradient(ellipse at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, #ffffff 0%, ${glow} 140%)`,
+          willChange: 'clip-path, opacity',
         });
-        setTimeout(() => setOpenKey(null), 500);
-        setTimeout(() => {
-          scene.style.transition = '';
+        document.body.appendChild(panel);
+        // the black cover gives way to the light at once
+        fadeBlack(blackRef.current, false, '0.25s');
+        const inset = `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 2px)`;
+        const shrink = panel.animate(
+          [
+            { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, offset: 0 },
+            { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, offset: 0.12 },
+            { clipPath: inset, opacity: 1, offset: 0.82 },
+            { clipPath: inset, opacity: 0, offset: 1 },
+          ],
+          { duration: 1500, easing: 'cubic-bezier(0.65, 0, 0.25, 1)', fill: 'forwards' },
+        );
+        const done = () => {
+          panel.remove();
+          setOpenKey(null);
           busy.current = false;
-        }, 1400);
+        };
+        shrink.onfinish = done;
+        shrink.oncancel = done;
       }),
     );
   }, []);
