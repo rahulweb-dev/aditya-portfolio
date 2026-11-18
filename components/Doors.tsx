@@ -8,6 +8,8 @@ import DoorDetails from './DoorDetails';
 import GlowDoors, { DOOR_GLOW, type DoorSpot } from './GlowDoors';
 import { Eyebrow } from './ui';
 import Wormhole from './Wormhole';
+import SoundToggle from './SoundToggle';
+import { playBack, playEnter, playHover } from '@/lib/doorSound';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
@@ -98,6 +100,7 @@ export default function Doors() {
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
         setOpenKey(skill);
+        playBack(skill);
         zoomInto(scene, door, true, 0);
         scene.getBoundingClientRect(); // apply the zoom before easing out of it
         requestAnimationFrame(() => {
@@ -118,6 +121,7 @@ export default function Doors() {
       if (busy.current) return;
       busy.current = true;
       setOpenKey(key);
+      playEnter(key);
       if (reducedMotion() || !scene || !door) return router.push(`/work/${key}`);
       // the doorway lifts and whites out, we rush into its light, and fall through the wormhole
       setTimeout(() => zoomInto(scene, door, true, 0.9), 150);
@@ -139,7 +143,11 @@ export default function Doors() {
             spots={DESKTOP_SPOTS}
             hovered={hovered}
             openKey={openKey}
-            onHover={k => !busy.current && setHovered(k)}
+            onHover={k => {
+              if (busy.current) return;
+              setHovered(k);
+              if (k) playHover(k);
+            }}
             onEnter={enterDesktop}
             className="absolute inset-0 size-full"
           />
@@ -149,6 +157,8 @@ export default function Doors() {
               Magic happens <span className="serif-accent">behind the doors</span>
             </h2>
           </div>
+
+          <SoundToggle className="absolute right-[clamp(20px,4vw,56px)] bottom-[clamp(20px,5vh,44px)]" />
 
           {/* what's behind the door you're looking at, at the bottom in the middle */}
           <div className="pointer-events-none absolute inset-x-0 bottom-[clamp(20px,5vh,44px)] flex justify-center px-6">
@@ -182,6 +192,7 @@ export default function Doors() {
           <h2 className="m-0 text-[44px] leading-[48px] tracking-[-0.015em] text-balance text-fg">
             Magic happens <span className="serif-accent">behind the doors</span>
           </h2>
+          <SoundToggle className="mt-2" />
         </div>
         <div className="mt-12 flex flex-col gap-10">
           {ROOMS.map((r, i) => (

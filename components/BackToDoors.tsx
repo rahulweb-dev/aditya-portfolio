@@ -3,12 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import type { SkillKey } from '@/lib/content';
+import { wakeAudio } from '@/lib/doorSound';
 
 export default function BackToDoors({ skill }: { skill: SkillKey }) {
   const router = useRouter();
   const black = useRef<HTMLDivElement>(null);
 
   function back() {
+    wakeAudio(); // so the pull-back out of the doorway can be heard
     try {
       sessionStorage.setItem('returnDoor', skill);
     } catch {}
