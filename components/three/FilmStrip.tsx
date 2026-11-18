@@ -26,7 +26,7 @@ const RIBBON_W = 54;
 
 // One speed for everything: the film rolls left and its waves travel left at the same pace,
 // so the strip moves as one ribbon instead of sliding over its own ripples.
-const SPEED = 0.324; // world units per second
+const SPEED = 0.75; // world units per second: about one frame every three seconds
 
 const loadImage = (src: string) =>
   new Promise<HTMLImageElement>(resolve => {
@@ -38,7 +38,7 @@ const loadImage = (src: string) =>
   });
 
 /** A film's place on the strip: its frame's picture area on the texture, and the video that fills it. */
-type Slot = { video: HTMLVideoElement; canvas: HTMLCanvasElement; tex: THREE.CanvasTexture; x: number; y: number; w: number; h: number; secs: number };
+type Slot = { video: HTMLVideoElement; canvas: HTMLCanvasElement; tex: THREE.CanvasTexture; x: number; y: number; w: number; h: number; secs: number; last?: number };
 
 /** Draws a video's current picture into its slot: cover-fit, rounded corners, its running time. */
 function paintSlot(s: Slot) {
@@ -214,7 +214,6 @@ function Strip({ frames, onReady, still, active, area, onOpen }: { frames: FilmF
   const gl = useThree(s => s.gl);
   const maxTex = gl.capabilities.maxTextureSize;
   const { texture, period, n, slots, height } = useFilmTexture(frames, maxTex, onReady);
-  const sinceVideo = useRef(0);
   const at = useMemo(() => new THREE.Vector2(), []);
 
   // the films play while the strip is on screen, and rest when it isn't
@@ -253,16 +252,33 @@ function Strip({ frames, onReady, still, active, area, onOpen }: { frames: FilmF
     }
     pos.needsUpdate = true;
 
-    // ~15 times a second, copy each playing film's picture into its frame on the film (only that small
-    // area is sent to the graphics card, so the strip stays smooth)
-    sinceVideo.current += dt;
-    if (sinceVideo.current >= 1 / 15 && slots.current.length) {
-      sinceVideo.current = 0;
+    // Copy the pictures of the playing films that are on screen into their frames: at most one film per
+    // frame, taking turns, each about 10 times a second. Only that small area goes to the graphics card,
+    // so no single frame gets heavy and the roll stays smooth.
+    if (slots.current.length) {
+      const now = performance.now();
+      const texW = (texture.image as HTMLCanvasElement).width;
+      // the stretch of film on screen: about the middle 40% of the ribbon, with a little margin
+      const from = texture.offset.x + 0.28 * texture.repeat.x;
+      const span = 0.44 * texture.repeat.x;
+      const onScreen = (sl: Slot) => {
+        if (span >= 1) return true;
+        const a = sl.x / texW;
+        const b = (sl.x + sl.w) / texW;
+        const d = (((a - from) % 1) + 1) % 1; // how far past the visible start this frame begins
+        return d <= span || (((b - from) % 1) + 1) % 1 <= span;
+      };
+      // the film that has waited longest, if it is due
+      let next: Slot | null = null;
       for (const sl of slots.current) {
-        if (sl.video.readyState < 2 || sl.video.paused) continue;
-        paintSlot(sl);
-        at.set(sl.x, height - sl.y - sl.h); // the film's rows run bottom-up on the card
-        gl.copyTextureToTexture(sl.tex, texture, null, at);
+        if (sl.video.readyState < 2 || sl.video.paused || now - (sl.last ?? 0) < 100 || !onScreen(sl)) continue;
+        if (!next || (sl.last ?? 0) < (next.last ?? 0)) next = sl;
+      }
+      if (next) {
+        next.last = now;
+        paintSlot(next);
+        at.set(next.x, height - next.y - next.h); // the film's rows run bottom-up on the card
+        gl.copyTextureToTexture(next.tex, texture, null, at);
       }
     }
   });
