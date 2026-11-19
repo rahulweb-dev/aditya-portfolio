@@ -1,28 +1,49 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { SkillKey } from '@/lib/content';
-import { wakeAudio } from '@/lib/doorSound';
+import { playEnter, wakeAudio } from '@/lib/doorSound';
+import { DOOR_GLOW } from './GlowDoors';
+import Wormhole from './Wormhole';
 
+/**
+ * "Back to the doors": the same tunnel as stepping through a door (in this door's light, with the same
+ * sound), then the home page opens and the black fades softly away onto the doors.
+ */
 export default function BackToDoors({ skill }: { skill: SkillKey }) {
   const router = useRouter();
   const black = useRef<HTMLDivElement>(null);
+  const [tunnel, setTunnel] = useState(false);
+  const going = useRef(false);
 
   function back() {
-    wakeAudio(); // so the pull-back out of the doorway can be heard
+    if (going.current) return;
+    going.current = true;
+    wakeAudio();
     try {
       sessionStorage.setItem('returnDoor', skill);
     } catch {}
-    if (black.current) black.current.style.opacity = '1';
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // the tunnel, as on the way in (skipped for anyone who prefers less motion)
+    if (!still) {
+      setTunnel(true);
+      playEnter(skill);
+    }
+    const fadeAt = still ? 0 : 1400;
+    setTimeout(() => {
+      if (black.current) {
+        black.current.style.transitionDuration = '400ms';
+        black.current.style.opacity = '1';
+      }
+    }, fadeAt);
     // keep the screen black through the change of page (the home page clears it once it has
     // scrolled to the doors), so the top of the home page never flashes up in between
-    setTimeout(() => (document.documentElement.dataset.returning = 'true'), 300);
+    setTimeout(() => (document.documentElement.dataset.returning = 'true'), fadeAt + 380);
     setTimeout(() => {
       delete document.documentElement.dataset.returning; // in case the page never arrives
-    }, 4000);
-    // The home page picks up 'returnDoor' and zooms back out of this doorway.
-    setTimeout(() => router.push('/', { scroll: false }), 380);
+    }, fadeAt + 4000);
+    setTimeout(() => router.push('/', { scroll: false }), fadeAt + 420);
   }
 
   return (
@@ -34,6 +55,7 @@ export default function BackToDoors({ skill }: { skill: SkillKey }) {
       >
         ← Back to the doors
       </button>
+      {tunnel && <Wormhole color={DOOR_GLOW[skill]} />}
       <div ref={black} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] bg-black opacity-0 transition-opacity duration-300" />
     </>
   );

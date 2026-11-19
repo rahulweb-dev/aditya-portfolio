@@ -9,7 +9,7 @@ import GlowDoors, { DOOR_GLOW, type DoorSpot } from './GlowDoors';
 import { Eyebrow } from './ui';
 import Wormhole from './Wormhole';
 import SoundToggle from './SoundToggle';
-import { playBack, playEnter, playHover } from '@/lib/doorSound';
+import { playEnter, playHover } from '@/lib/doorSound';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
@@ -82,7 +82,7 @@ export default function Doors() {
     ROOMS.forEach(r => router.prefetch(`/work/${r.key}`));
   }, [router]);
 
-  // Coming back from a room: start inside that doorway's light and pull back out into the dunes.
+  // Coming back from a room: land on the doors (a soft fade from black, no door animation).
   useEffect(() => {
     let key: string | null = null;
     try {
@@ -107,61 +107,16 @@ export default function Doors() {
     fadeBlack(blackRef.current, true, '0s');
     clearCover(); // our own black cover has taken over
 
-    const scene = isDesktop() ? deskRef.current : null;
-    const door = scene?.querySelector(`[data-door="${skill}"] [data-core]`);
-    if (!scene || !door || reducedMotion()) {
-      requestAnimationFrame(() => fadeBlack(blackRef.current, false, '0.6s'));
-      busy.current = false;
-      return;
-    }
-    // Pull back out of the doorway: the screen starts filled with the door's light, which shrinks back
-    // into the doorway while the dunes appear around it at their normal size. Only a flat panel moves
-    // (no scaling of the scene), so it stays crisp and smooth on any machine.
-    setOpenKey(skill); // the doorway glows white and the dunes hold still while we pull back
-    // wait (in the dark) until the freshly opened page has finished setting itself up, so the
-    // pull-back never starts in the middle of that work
-    const whenSettled = (go: () => void) => {
-      const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-      if (ric) ric(go, { timeout: 900 });
-      else setTimeout(go, 250);
-    };
-    whenSettled(() =>
+    // Back on the doors: no door animation (that plays only when stepping in). Once the page has
+    // settled, the black simply fades away onto the doors.
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const reveal = () =>
       requestAnimationFrame(() => {
-        playBack(skill);
-        const r = door.getBoundingClientRect();
-        const glow = DOOR_GLOW[skill];
-        const panel = document.createElement('div');
-        panel.setAttribute('aria-hidden', 'true');
-        Object.assign(panel.style, {
-          position: 'fixed',
-          inset: '0',
-          zIndex: '61',
-          pointerEvents: 'none',
-          background: `radial-gradient(ellipse at ${r.left + r.width / 2}px ${r.top + r.height / 2}px, #ffffff 0%, ${glow} 140%)`,
-          willChange: 'clip-path, opacity',
-        });
-        document.body.appendChild(panel);
-        // the black cover gives way to the light at once
-        fadeBlack(blackRef.current, false, '0.25s');
-        const inset = `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round 2px)`;
-        const shrink = panel.animate(
-          [
-            { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, offset: 0 },
-            { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, offset: 0.12 },
-            { clipPath: inset, opacity: 1, offset: 0.82 },
-            { clipPath: inset, opacity: 0, offset: 1 },
-          ],
-          { duration: 1500, easing: 'cubic-bezier(0.65, 0, 0.25, 1)', fill: 'forwards' },
-        );
-        const done = () => {
-          panel.remove();
-          setOpenKey(null);
-          busy.current = false;
-        };
-        shrink.onfinish = done;
-        shrink.oncancel = done;
-      }),
-    );
+        fadeBlack(blackRef.current, false, '0.6s');
+        busy.current = false;
+      });
+    if (ric) ric(reveal, { timeout: 700 });
+    else setTimeout(reveal, 200);
   }, []);
 
   const enter = useCallback(
