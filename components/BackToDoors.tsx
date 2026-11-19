@@ -3,13 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import type { SkillKey } from '@/lib/content';
-import { playEnter, wakeAudio } from '@/lib/doorSound';
+import { playBack, wakeAudio } from '@/lib/doorSound';
 import { DOOR_GLOW } from './GlowDoors';
 import Wormhole from './Wormhole';
 
 /**
- * "Back to the doors": the same tunnel as stepping through a door (in this door's light, with the same
- * sound), then the home page opens and the black fades softly away onto the doors.
+ * "Back to the doors": the tunnel you came in through, played backwards (in this door's light, with
+ * the pull-back sound), then the home page opens and the black fades softly away onto the doors.
  */
 export default function BackToDoors({ skill }: { skill: SkillKey }) {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function BackToDoors({ skill }: { skill: SkillKey }) {
     // the tunnel, as on the way in (skipped for anyone who prefers less motion)
     if (!still) {
       setTunnel(true);
-      playEnter(skill);
+      playBack(skill);
     }
     const fadeAt = still ? 0 : 1400;
     setTimeout(() => {
@@ -55,7 +55,7 @@ export default function BackToDoors({ skill }: { skill: SkillKey }) {
       >
         ← Back to the doors
       </button>
-      {tunnel && <Wormhole color={DOOR_GLOW[skill]} />}
+      {tunnel && <Wormhole color={DOOR_GLOW[skill]} reverse />}
       <div ref={black} aria-hidden="true" className="pointer-events-none fixed inset-0 z-[60] bg-black opacity-0 transition-opacity duration-300" />
     </>
   );

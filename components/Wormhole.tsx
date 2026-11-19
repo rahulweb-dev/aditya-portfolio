@@ -8,9 +8,13 @@ const STREAKS = 140;
 /**
  * Stepping through a door: a tunnel of doorway frames in the door's light rushes past, twisting,
  * faster and faster, with streaks of light flying by, until the far end opens up into light.
+ * With `reverse` (coming back to the doors) it plays backwards: you back out of the tunnel, the frames
+ * slide away into the distance, the light streams back to the centre and the far end shrinks away.
  * Mounted only while it plays.
  */
-export default function Wormhole({ color }: { color: string }) {
+const REVERSE_FROM = 1.8; // backing out starts where the way in had got to by this time (seconds)
+
+export default function Wormhole({ color, reverse = false }: { color: string; reverse?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -27,11 +31,13 @@ export default function Wormhole({ color }: { color: string }) {
     let raf = 0;
 
     const frame = (now: number) => {
-      const t = (now - start) / 1000;
+      const real = (now - start) / 1000;
+      // backwards: time runs back from deep in the tunnel, so it starts fast and eases out
+      const t = reverse ? Math.max(0, REVERSE_FROM - real) : real;
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      const speed = 0.25 + t * t * 1.4; // it gathers pace
-      travel += speed * dt;
+      const speed = 0.25 + t * t * 1.4; // it gathers pace (or, backwards, slows down)
+      travel += (reverse ? -1 : 1) * speed * dt;
       const twist = t * 0.9 + t * t * 0.5;
 
       // a short trail of the last frames: motion blur
@@ -69,10 +75,19 @@ export default function Wormhole({ color }: { color: string }) {
       // streaks of light flying past
       ctx.lineCap = 'round';
       for (const p of streaks) {
-        p.r += p.r * speed * dt * 2.2 + dt * 0.05;
-        if (p.r > 1.6) {
-          p.r = 0.02 + Math.random() * 0.1;
-          p.a = Math.random() * Math.PI * 2;
+        if (reverse) {
+          // backwards: the light streams back in towards the centre
+          p.r -= p.r * speed * dt * 2.2 + dt * 0.05;
+          if (p.r < 0.03) {
+            p.r = 1.1 + Math.random() * 0.5;
+            p.a = Math.random() * Math.PI * 2;
+          }
+        } else {
+          p.r += p.r * speed * dt * 2.2 + dt * 0.05;
+          if (p.r > 1.6) {
+            p.r = 0.02 + Math.random() * 0.1;
+            p.a = Math.random() * Math.PI * 2;
+          }
         }
         const a = p.a + twist * 0.3;
         const r0 = p.r * unit * 0.8;
@@ -94,7 +109,7 @@ export default function Wormhole({ color }: { color: string }) {
     // fade the tunnel in over the doorway
     requestAnimationFrame(() => (cv.style.opacity = '1'));
     return () => cancelAnimationFrame(raf);
-  }, [color]);
+  }, [color, reverse]);
 
   return (
     <canvas
